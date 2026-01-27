@@ -220,7 +220,7 @@ def experiment(dataset_config: DatasetConfig, model_config: ModelConfig, train_c
     
     return var_square_loss
 
-def policy_gradient_train(gp_model, init_train_x, init_train_y, pool_x, pool_y, test_x, test_y, model_config, train_config, gp_config, Predictor):
+def policy_gradient_train(gp_model, init_train_x, init_train_y, pool_x, pool_y, test_x, test_y, model_config, train_config, gp_config, Predictor, if_baseline = False):
 
     pool_size = pool_x.size(0)
     reciprocal_size_value =  math.log(1.0 / pool_size)
@@ -245,8 +245,9 @@ def policy_gradient_train(gp_model, init_train_x, init_train_y, pool_x, pool_y, 
             prob = F.softmax(w, dim=0)
             print("w:",w)
             print("prob:",prob)   
-            
-            loss_temp = []
+            #loss_temp = []
+            logpr_list = []
+            loss_list = []
             for j in range(train_config.G_samples):
                 batch_ind = torch.multinomial(prob, batch_size_query, replacement=False)
                 log_pr = (torch.log(prob[batch_ind])).sum()
@@ -257,10 +258,24 @@ def policy_gradient_train(gp_model, init_train_x, init_train_y, pool_x, pool_y, 
                 mean, loss, done = env.step(action) # env step, uq update
                 print("log_pr:", log_pr)
                 print("loss:", loss)
-                loss_temp.append(log_pr*loss)
+                #loss_temp.append(log_pr*loss)
+                logpr_list.append(log_pr)
+                loss_list.append(loss)
                 env.reset()
 
-            avg_loss = torch.stack(loss_temp).mean()
+            #avg_loss = torch.stack(loss_temp).mean()
+            loss_tensor = torch.stack(loss_list)
+            logpr_tensor = torch.stack(logpr_list)
+
+
+            if if_baseline:
+                baseline = loss_tensor.mean().detach()
+            else:
+                baseline = torch.zeros_like(loss_tensor.mean())
+
+
+            adv = loss_tensor - baseline
+            avg_loss = (logpr_tensor * adv).mean()
 
             optimizer.zero_grad()
             avg_loss.backward()
