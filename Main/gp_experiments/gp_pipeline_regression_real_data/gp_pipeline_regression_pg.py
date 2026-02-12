@@ -67,6 +67,7 @@ class ModelConfig:
     temp_k_subset: float
     meta_opt_lr: float
     meta_opt_weight_decay: float
+    use_baseline: bool = False  # Add baseline flag for REINFORCE
 
 
 @dataclass
@@ -247,7 +248,8 @@ def policy_gradient_train(gp_model, init_train_x, init_train_y, pool_x, pool_y, 
             print("w:",w)
             print("prob:",prob)   
             
-            loss_temp = []
+            logpr_list = []
+            loss_list = []
             for j in range(train_config.G_samples):
                 batch_ind = torch.multinomial(prob, batch_size_query, replacement=False)
                 log_pr = (torch.log(prob[batch_ind])).sum()
@@ -258,10 +260,26 @@ def policy_gradient_train(gp_model, init_train_x, init_train_y, pool_x, pool_y, 
                 mean, loss, done = env.step(action) # env step, uq update
                 print("log_pr:", log_pr)
                 print("loss:", loss)
-                loss_temp.append(log_pr*loss)
+                logpr_list.append(log_pr)
+                loss_list.append(loss)
                 env.reset()
 
-            avg_loss = torch.stack(loss_temp).mean()
+            # Convert to tensors
+            loss_tensor = torch.stack(loss_list)
+            logpr_tensor = torch.stack(logpr_list)
+
+            # REINFORCE with baseline (if enabled)
+            if model_config.use_baseline:
+                baseline = loss_tensor.mean().detach()  # Use mean as baseline
+                print("baseline:", baseline)
+            else:
+                baseline = torch.zeros_like(loss_tensor.mean())
+
+            # Compute advantage
+            adv = loss_tensor - baseline
+
+            # Policy gradient with advantage
+            avg_loss = (logpr_tensor * adv).mean()
 
             optimizer.zero_grad()
             avg_loss.backward()

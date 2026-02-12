@@ -1,139 +1,238 @@
 {
-  "method": "grid",
-  "metric": {
-    "name": "val_final_var_square_loss",
-    "goal": "minimize"
-  },
-  "parameters": {
-	"no_train_points":{
-         "values": [100]
+    "method": "grid",
+    "metric": {
+        "name": "val_final_var_square_loss",
+        "goal": "minimize"
     },
-    "no_test_points":{
-         "values": [285]
-    },
-    "no_pool_points":{
-         "values": [500]
-    },
-    "dataset_model_name":{
-         "values": ["GP"]
-    },
-    "no_anchor_points":{
-         "values": [51]
-    },	
-    "input_dim":{
-         "values": [1]
-    },	
-    "stdev_scale":{
-         "values": [0.5]
-    },	
-    "stdev_pool_scale":{
-         "values": [0.5]
-    },	
-    "scaling_factor":{
-         "values": [1.0]       
-    },	
-    "scale_by_input_dim":{
-         "values": [true]
-    },	
-    "gp_model_dataset_generation":{
-         "values": ["specify_own"]
-    },
-    "stdev_blr_w":{
-         "values": [0.1]
-    },	
-    "stdev_blr_noise":{
-         "values": [0.01]
-    },	
-    "logits":{
-         "values": [null]
-    },	
-    "if_logits":{
-         "values": [true]
-    },	
-    "if_logits_only_pool":{
-         "values": [false]
-    },	
-    "plot_folder":{
-         "values": ["none"]
-    },	
-    "direct_tensors_bool":{
-         "values": [true]
-    },	
-    "csv_file_train":{
-         "values": ["none"]
-    },	
-    "csv_file_test":{
-         "values": ["none"]
-    },	
-    "csv_file_pool":{
-         "values": ["none"]
-    },	
-    "y_column":{
-         "values": ["none"]
-    },
-    "access_to_true_pool_y":{
-         "values": [false]
-    },
-    "hyperparameter_tune":{
-         "values": [false]
-    },
-    "batch_size_query":{
-         "values": [5]
-    },
-    "temp_k_subset":{
-         "values": [0.1]
-    },
-    "meta_opt_lr":{
-         "values": [0.1]
-    },
-    "meta_opt_weight_decay":{
-         "values": [0.0]
-    },
-    "n_train_iter":{
-         "values": [1000,2000]
-    },
-    "n_samples":{
-         "values": [100]
-    },
-    "G_samples":{
-         "values": [10]
-    },
-    "mean_constant":{
-         "values": [0.255]
-     },
-    "length_scale":{
-         "values": [0.5]
-    },
-    "output_scale":{
-         "values": [1.0]
-    },
-    "noise_var":{
-         "values": [1e-4]
-    },
-    "dataset_mean_constant":{
-         "values": [0.0]
-    },
-    "dataset_length_scale":{
-         "values": [1.0]
-    },
-    "dataset_output_scale":{
-         "values": [0.69]
-    },
-    "dataset_noise_std":{
-         "values": [0.1]
-    },
-    "seed_dataset":{
-		"values": [0]
-    },
-    "seed_training":{
-		"values": [0]
-    },
-        "no_horizons":{
-        "values": [10]
-    },
-    "csv_directory":{
-         "values": ["/shared/share_mala/data/eicu_train_test/0518_data/"]
-    }		
-	
-  }
+    "parameters": {
+        "no_train_points": {
+            "values": [
+                100
+            ]
+        },
+        "no_test_points": {
+            "values": [
+                285
+            ]
+        },
+        "no_pool_points": {
+            "values": [
+                500
+            ]
+        },
+        "dataset_model_name": {
+            "values": [
+                "GP"
+            ]
+        },
+        "no_anchor_points": {
+            "values": [
+                51
+            ]
+        },
+        "input_dim": {
+            "values": [
+                1
+            ]
+        },
+        "stdev_scale": {
+            "values": [
+                0.5
+            ]
+        },
+        "stdev_pool_scale": {
+            "values": [
+                0.5
+            ]
+        },
+        "scaling_factor": {
+            "values": [
+                1.0
+            ]
+        },
+        "scale_by_input_dim": {
+            "values": [
+                true
+            ]
+        },
+        "gp_model_dataset_generation": {
+            "values": [
+                "specify_own"
+            ]
+        },
+        "stdev_blr_w": {
+            "values": [
+                0.1
+            ]
+        },
+        "stdev_blr_noise": {
+            "values": [
+                0.01
+            ]
+        },
+        "logits": {
+            "values": [
+                null
+            ]
+        },
+        "if_logits": {
+            "values": [
+                true
+            ]
+        },
+        "if_logits_only_pool": {
+            "values": [
+                false
+            ]
+        },
+        "plot_folder": {
+            "values": [
+                "none"
+            ]
+        },
+        "direct_tensors_bool": {
+            "values": [
+                true
+            ]
+        },
+        "csv_file_train": {
+            "values": [
+                "none"
+            ]
+        },
+        "csv_file_test": {
+            "values": [
+                "none"
+            ]
+        },
+        "csv_file_pool": {
+            "values": [
+                "none"
+            ]
+        },
+        "y_column": {
+            "values": [
+                "none"
+            ]
+        },
+        "access_to_true_pool_y": {
+            "values": [
+                false
+            ]
+        },
+        "hyperparameter_tune": {
+            "values": [
+                false
+            ]
+        },
+        "batch_size_query": {
+            "values": [
+                5
+            ]
+        },
+        "temp_k_subset": {
+            "values": [
+                0.1
+            ]
+        },
+        "meta_opt_lr": {
+            "values": [
+                0.1
+            ]
+        },
+        "meta_opt_weight_decay": {
+            "values": [
+                0.0
+            ]
+        },
+        "use_baseline": {
+            "values": [
+                true
+            ]
+        },
+        "n_train_iter": {
+            "values": [
+                1000
+            ]
+        },
+        "n_samples": {
+            "values": [
+                100
+            ]
+        },
+        "G_samples": {
+            "values": [
+                10
+            ]
+        },
+        "mean_constant": {
+            "values": [
+                0.255
+            ]
+        },
+        "length_scale": {
+            "values": [
+                0.5
+            ]
+        },
+        "output_scale": {
+            "values": [
+                1.0
+            ]
+        },
+        "noise_var": {
+            "values": [
+                0.0001
+            ]
+        },
+        "dataset_mean_constant": {
+            "values": [
+                0.0
+            ]
+        },
+        "dataset_length_scale": {
+            "values": [
+                1.0
+            ]
+        },
+        "dataset_output_scale": {
+            "values": [
+                0.69
+            ]
+        },
+        "dataset_noise_std": {
+            "values": [
+                0.1
+            ]
+        },
+        "seed_dataset": {
+            "values": [
+                0
+            ]
+        },
+        "seed_training": {
+            "values": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9
+            ]
+        },
+        "no_horizons": {
+            "values": [
+                10
+            ]
+        },
+        "csv_directory": {
+            "values": [
+                "/shared/share_mala/data/eicu_train_test/0518_data/"
+            ]
+        }
+    }
 }

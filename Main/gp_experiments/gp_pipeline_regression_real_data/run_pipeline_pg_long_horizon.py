@@ -14,8 +14,9 @@ warnings.filterwarnings('ignore')
 n_samples_track = 1000
 import gp_pipeline_regression_pg
 import polyadic_sampler_new as polyadic_sampler
-from constant_network import ConstantValueNetwork
+from predictor_network import train_predictor, load_predictor
 import wandb
+import copy
 
 from variance_l_2_loss import var_l2_loss_estimator, l2_loss
 from polyadic_sampler_new import CustomizableGPModel
@@ -85,8 +86,9 @@ def main_run_func():
         temp_k_subset = config.temp_k_subset
         meta_opt_lr = config.meta_opt_lr
         meta_opt_weight_decay = config.meta_opt_weight_decay
+        use_baseline = config.use_baseline  # REINFORCE baseline flag
 
-        
+
         csv_directory = config.csv_directory
 
         n_train_iter = config.n_train_iter
@@ -217,13 +219,34 @@ def main_run_func():
         
         
         dataset_cfg = gp_pipeline_regression_pg.DatasetConfig(direct_tensors_bool, csv_file_train, csv_file_test, csv_file_pool, y_column)
-        model_cfg = gp_pipeline_regression_pg.ModelConfig(access_to_true_pool_y = access_to_true_pool_y, hyperparameter_tune = hyperparameter_tune, batch_size_query = batch_size_query, temp_k_subset = temp_k_subset, meta_opt_lr = meta_opt_lr, meta_opt_weight_decay = meta_opt_weight_decay)
+        model_cfg = gp_pipeline_regression_pg.ModelConfig(access_to_true_pool_y = access_to_true_pool_y, hyperparameter_tune = hyperparameter_tune, batch_size_query = batch_size_query, temp_k_subset = temp_k_subset, meta_opt_lr = meta_opt_lr, meta_opt_weight_decay = meta_opt_weight_decay, use_baseline = use_baseline)
         #train_cfg = gp_pipeline_regression.TrainConfig(n_train_iter = n_train_iter, n_samples = n_samples, G_samples=G_samples) 
         train_cfg = gp_pipeline_regression_pg.TrainConfig(n_train_iter = n_train_iter, n_samples = n_samples, G_samples=G_samples) 
         # gp_cfg = gp_pipeline_regression_modified.GPConfig(length_scale=length_scale, output_scale= output_scale, noise_var = noise_var, parameter_tune_lr = parameter_tune_lr, parameter_tune_weight_decay = parameter_tune_weight_decay, parameter_tune_nepochs = parameter_tune_nepochs, stabilizing_constant = stabilizing_constant)
         gp_cfg = gp_pipeline_regression_pg.GPConfig(mean_constant=mean_constant, length_scale=length_scale, output_scale= output_scale, noise_var = noise_var)
 
-        model_predictor = ConstantValueNetwork(constant_value=0.0, output_size=1).to(device)
+        # Load or train the predictor network
+        if PREDICTOR_PATH is not None:
+            print(f"Loading pre-trained predictor from {PREDICTOR_PATH}")
+            model_predictor = load_predictor(PREDICTOR_PATH, device=device)
+        else:
+            print("Training new predictor network...")
+            model_predictor = train_predictor(
+                train_x=train_x,
+                train_y=train_y,
+                device=device,
+                input_dim=input_dim,
+                hidden_dims=[64, 32],
+                output_size=1,
+                dropout=0.1,
+                lr=1e-3,
+                weight_decay=1e-4,
+                n_epochs=100,
+                batch_size=min(32, train_x.size(0)),
+                val_split=0.2,
+                early_stopping_patience=10,
+                verbose=True
+            )
         model_predictor.eval()
 
 
@@ -308,19 +331,22 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="This script processes command line arguments.")
     parser.add_argument("--config_file_path", type=str, help="Path to the JSON file containing the sweep configuration", default='config_sweep_pg.json')
     parser.add_argument("--project_name", type=str, help="WandB project name", default='adaptive_sampling_gp_pg')
+    parser.add_argument("--predictor_path", type=str, help="Path to pre-trained predictor (if not provided, will train new one). Can also be 'zero', 'const:0.0', or 'const:1.0'", default=None)
     args = parser.parse_args()
     wandb.login()
 
     # Load sweep configuration from the JSON file
     with open(args.config_file_path, 'r') as config_file:
         config_params = json.load(config_file)
-    
-    
+
+
     # Initialize the sweep
     global ENTITY
     ENTITY = 'dm3766'
     global PROJECT_NAME
     PROJECT_NAME = args.project_name
+    global PREDICTOR_PATH
+    PREDICTOR_PATH = args.predictor_path
 
 
     sweep_id = wandb.sweep(config_params, project=args.project_name, entity=ENTITY)

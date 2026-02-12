@@ -13,8 +13,9 @@ warnings.filterwarnings('ignore')
 
 import gp_pipeline_regression_pg
 import polyadic_sampler_new as polyadic_sampler
-from constant_network import ConstantValueNetwork
+from predictor_network import train_predictor, load_predictor
 import wandb
+import copy
 
 n_samples_track = 1000
 
@@ -220,7 +221,28 @@ def main_run_func():
         # gp_cfg = gp_pipeline_regression_modified.GPConfig(length_scale=length_scale, output_scale= output_scale, noise_var = noise_var, parameter_tune_lr = parameter_tune_lr, parameter_tune_weight_decay = parameter_tune_weight_decay, parameter_tune_nepochs = parameter_tune_nepochs, stabilizing_constant = stabilizing_constant)
         gp_cfg = gp_pipeline_regression_pg.GPConfig(mean_constant = mean_constant, length_scale=length_scale, output_scale= output_scale, noise_var = noise_var)
 
-        model_predictor = ConstantValueNetwork(constant_value=0.0, output_size=1).to(device)
+        # Load or train the predictor network
+        if PREDICTOR_PATH is not None:
+            print(f"Loading pre-trained predictor from {PREDICTOR_PATH}")
+            model_predictor = load_predictor(PREDICTOR_PATH, device=device)
+        else:
+            print("Training new predictor network...")
+            model_predictor = train_predictor(
+                train_x=train_x,
+                train_y=train_y,
+                device=device,
+                input_dim=input_dim,
+                hidden_dims=[64, 32],
+                output_size=1,
+                dropout=0.1,
+                lr=1e-3,
+                weight_decay=1e-4,
+                n_epochs=100,
+                batch_size=min(32, train_x.size(0)),
+                val_split=0.2,
+                early_stopping_patience=10,
+                verbose=True
+            )
         model_predictor.eval()
 
 
@@ -382,6 +404,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="This script processes command line arguments.")
     parser.add_argument("--config_file_path", type=str, help="Path to the JSON file containing the sweep configuration", default='config_sweep_active_learning.json')
     parser.add_argument("--project_name", type=str, help="WandB project name", default='adaptive_sampling_gp_active_learning')
+    parser.add_argument("--predictor_path", type=str, help="Path to pre-trained predictor (if not provided, will train new one). Can also be 'zero', 'const:0.0', or 'const:1.0'", default=None)
     args = parser.parse_args()
     wandb.login()
 
@@ -389,13 +412,15 @@ if __name__ == "__main__":
     # Load sweep configuration from the JSON file
     with open(args.config_file_path, 'r') as config_file:
         config_params = json.load(config_file)
-    
-    
+
+
     # Initialize the sweep
     global ENTITY
     ENTITY = 'dm3766'
     global PROJECT_NAME
     PROJECT_NAME = args.project_name
+    global PREDICTOR_PATH
+    PREDICTOR_PATH = args.predictor_path
 
 
     sweep_id = wandb.sweep(config_params, project=args.project_name, entity=ENTITY)
