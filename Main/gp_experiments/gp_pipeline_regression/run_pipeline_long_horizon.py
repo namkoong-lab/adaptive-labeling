@@ -12,8 +12,9 @@ warnings.filterwarnings('ignore')
 
 import gp_pipeline_regression
 import polyadic_sampler_new as polyadic_sampler
-from constant_network import ConstantValueNetwork
+from predictor_network import train_predictor, load_predictor
 import wandb
+import copy
 
 
 n_samples_track = 1000
@@ -87,6 +88,9 @@ def main_run_func():
         y_column = config.y_column
 
 
+        #csv_directory = config.csv_directory
+
+
 
         access_to_true_pool_y = config.access_to_true_pool_y    #true or false
         hyperparameter_tune = config.hyperparameter_tune   #true or false
@@ -100,7 +104,7 @@ def main_run_func():
         n_samples = config.n_samples     #n_samples in variance calculation
         G_samples = config.G_samples     #G_samples in gradient average caluclation
 
-
+        #mean_constant = config.mean_constant
         length_scale = config.length_scale
         output_scale = config.output_scale
         noise_var =  config.noise_var
@@ -134,9 +138,7 @@ def main_run_func():
         if device=="cuda":
             torch.cuda.manual_seed(seed_dataset) # Sets the seed for the current GPU
             torch.cuda.manual_seed_all(seed_dataset) # Sets the seed for all GPUs
-        
-        
-        
+                
         if direct_tensors_bool:
             if dataset_model_name == "blr":
                 polyadic_sampler_cfg = polyadic_sampler.PolyadicSamplerConfig(no_train_points = no_train_points,no_test_points = no_test_points,no_pool_points=no_pool_points,model_name = dataset_model_name,no_anchor_points = no_anchor_points, input_dim = input_dim, stdev_scale=stdev_scale, stdev_pool_scale= stdev_pool_scale, scaling_factor = scaling_factor, scale_by_input_dim=scale_by_input_dim,model = None, stdev_blr_w = stdev_blr_w,stdev_blr_noise = stdev_blr_noise,logits = logits,if_logits = if_logits,if_logits_only_pool = if_logits_only_pool,plot_folder=plot_folder)
@@ -190,7 +192,28 @@ def main_run_func():
         train_cfg = gp_pipeline_regression.TrainConfig(n_train_iter = n_train_iter, n_samples = n_samples, G_samples=G_samples) #temp_var_recall is the new variable added here
         gp_cfg = gp_pipeline_regression.GPConfig(length_scale=length_scale, output_scale= output_scale, noise_var = noise_var, parameter_tune_lr = parameter_tune_lr, parameter_tune_weight_decay = parameter_tune_weight_decay, parameter_tune_nepochs = parameter_tune_nepochs, stabilizing_constant = stabilizing_constant)
 
-        model_predictor = ConstantValueNetwork(constant_value=0.0, output_size=1).to(device)
+        # Load or train the predictor network
+        if PREDICTOR_PATH is not None:
+            print(f"Loading pre-trained predictor from {PREDICTOR_PATH}")
+            model_predictor = load_predictor(PREDICTOR_PATH, device=device)
+        else:
+            print("Training new predictor network...")
+            model_predictor = train_predictor(
+                train_x=train_x,
+                train_y=train_y,
+                device=device,
+                input_dim=input_dim,
+                hidden_dims=[64, 32],
+                output_size=1,
+                dropout=0.1,
+                lr=1e-3,
+                weight_decay=1e-4,
+                n_epochs=100,
+                batch_size=min(32, train_x.size(0)),
+                val_split=0.2,
+                early_stopping_patience=10,
+                verbose=True
+            )
         model_predictor.eval()
 
 
@@ -206,7 +229,7 @@ def main_run_func():
         base_kernel_track  = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
         likelihood_track  = gpytorch.likelihoods.GaussianLikelihood()
 
-
+        #mean_constant_track = gp_cfg.mean_constant
         length_scale_track  = gp_cfg.length_scale
         noise_var_track  = gp_cfg.noise_var
         output_scale_track  = gp_cfg.output_scale
@@ -220,10 +243,11 @@ def main_run_func():
         gp_model_track  = CustomizableGPModel(train_x, train_y, mean_module_track , base_kernel_track , likelihood_track).to("cpu")
         gp_model_track.eval()
         likelihood_track.eval()
-        model_predictor_dumi =  ConstantValueNetwork(constant_value=0.0, output_size=1).to("cpu")
-        model_predictor_dumi.eval()
+        # Create a CPU copy of the trained predictor for tracking
+        model_predictor_cpu = copy.deepcopy(model_predictor).to("cpu")
+        model_predictor_cpu.eval()
 
-        mean_track, loss_track = var_l2_loss_estimator(gp_model_track, test_x.to("cpu"), model_predictor_dumi, "cpu", n_samples_track)
+        mean_track, loss_track = var_l2_loss_estimator(gp_model_track, test_x.to("cpu"), model_predictor_cpu, "cpu", n_samples_track)
 
         mean_actual = l2_loss(test_x, test_y, model_predictor, (test_x).device)
 
@@ -247,10 +271,8 @@ def main_run_func():
             gp_model_track  = CustomizableGPModel(train_x, train_y, mean_module_track , base_kernel_track , likelihood_track ).to("cpu")
             gp_model_track.eval()
             likelihood_track.eval()
-            model_predictor_dumi = ConstantValueNetwork(constant_value=0.0, output_size=1).to("cpu")
-            model_predictor_dumi.eval()
 
-            mean_track, loss_track = var_l2_loss_estimator(gp_model_track, test_x.to("cpu"), model_predictor_dumi, "cpu", n_samples_track)
+            mean_track, loss_track = var_l2_loss_estimator(gp_model_track, test_x.to("cpu"), model_predictor_cpu, "cpu", n_samples_track)
             mean_actual = l2_loss(test_x, test_y, model_predictor, (test_x).device)
             wandb.log({"var_square_loss_track": loss_track.item(), "l2_loss_track": mean_track.item(), "l2_loss_actual_track": mean_actual.item()})
 
@@ -274,6 +296,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="This script processes command line arguments.")
     parser.add_argument("--config_file_path", type=str, help="Path to the JSON file containing the sweep configuration", default='config_sweep.json')
     parser.add_argument("--project_name", type=str, help="WandB project name", default='adaptive_sampling_gp')
+    parser.add_argument("--predictor_path", type=str, help="Path to pre-trained predictor (if not provided, will train new one). Can also be 'zero', 'const:0.0', or 'const:1.0'", default=None)
     args = parser.parse_args()
     #wandb.login()
 
@@ -288,6 +311,8 @@ if __name__ == "__main__":
     ENTITY = 'dm3766'
     global PROJECT_NAME
     PROJECT_NAME = args.project_name
+    global PREDICTOR_PATH
+    PREDICTOR_PATH = args.predictor_path
 
 
     sweep_id = wandb.sweep(config_params, project=args.project_name, entity=ENTITY)

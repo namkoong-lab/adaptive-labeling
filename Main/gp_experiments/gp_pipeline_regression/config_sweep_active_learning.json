@@ -107,6 +107,9 @@
     "noise_var":{
          "values": [1e-2]
     },
+    "mean_constant":{
+         "values": [0.0]
+    },
     "dataset_mean_constant":{
          "values": [0.0]
     },

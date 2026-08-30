@@ -318,18 +318,19 @@ def test_smaller_dataset(gp_model, init_train_x, init_train_y, pool_x, pool_y, t
         wandb.log({"val_var_square_loss": var_square_loss.item(), "val_mean_square_loss": mean_square_loss.item(), "val_l_2_loss_actual":l_2_loss_actual.item()})
     
     #print("NN_weights_in_end:", NN_weights)
-    fig2 = plt.figure()
-    plt.scatter(init_train_x.cpu(),  init_train_y.cpu(), label='Train')
-    plt.scatter(test_x.cpu(),  test_y.cpu(), label='Test')
+    if input_feature_size == 1:
+        fig2 = plt.figure()
+        plt.scatter(init_train_x.cpu(),  init_train_y.cpu(), label='Train')
+        plt.scatter(test_x.cpu(),  test_y.cpu(), label='Test')
 
-    # Annotate each point in pool_x with its index
-    for (i, x, y) in zip(indices.detach().cpu(), pool_x[indices].cpu(), pool_y[indices].cpu()):
-        plt.annotate(i, (x, y))
+        # Annotate each point in pool_x with its index
+        for (i, x, y) in zip(indices.detach().cpu(), pool_x[indices].cpu(), pool_y[indices].cpu()):
+            plt.annotate(i, (x, y))
 
-    plt.scatter(pool_x[indices].cpu(), pool_y[indices].cpu(), label='Pool_selected')
-    plt.legend()
-    wandb.log({"env_plot_with_pool_indexes_selected": wandb.Image(fig2)})
-    plt.close(fig2)
+        plt.scatter(pool_x[indices].cpu(), pool_y[indices].cpu(), label='Pool_selected')
+        plt.legend()
+        wandb.log({"env_plot_with_pool_indexes_selected": wandb.Image(fig2)})
+        plt.close(fig2)
 
 
     

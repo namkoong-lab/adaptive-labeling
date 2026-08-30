@@ -67,6 +67,7 @@ class ModelConfig:
     temp_k_subset: float
     meta_opt_lr: float
     meta_opt_weight_decay: float
+    use_baseline: bool = False  # Add baseline flag for REINFORCE
 
 
 @dataclass
@@ -78,6 +79,7 @@ class TrainConfig:
 
 @dataclass
 class GPConfig:
+    mean_constant: float
     length_scale: float
     noise_var: float
     output_scale: float
@@ -122,7 +124,9 @@ class toy_GP_ENV(gym.Env):
         self.train_y = train_y
         self.test_x = test_x
         self.pool_x = pool_x
-        self.pool_y = pool_y
+        self.true_pool_y = pool_y
+        self.pool_y = pool_y                 # replaced by imputed labels when access_to_true_pool_y is False
+        self.access_to_true_pool_y = model_config.access_to_true_pool_y
         self.model = model
         self.Predictor = Predictor
         self.n_samples = train_config.n_samples
@@ -139,6 +143,23 @@ class toy_GP_ENV(gym.Env):
 
     def reset(self, seed=None, options=None):
         return None
+
+    def resample_pool_y(self):
+        """Draw the pool labels used for this episode.
+
+        With access to the true pool y we just use it. Without it, we condition the GP
+        on the init train set only and draw one sample of the pool labels from that
+        posterior (observation noise included), matching the imputation done in
+        gp_pipeline_regression.train_smaller_dataset.
+        """
+        if self.access_to_true_pool_y:
+            self.pool_y = self.true_pool_y
+            return
+
+        self.model.set_train_data(inputs=self.train_x, targets=self.train_y, strict=False)
+        with torch.no_grad():
+            pool_posterior = self.model.likelihood(self.model(self.pool_x))
+            self.pool_y = pool_posterior.sample()
 
     def _get_obs(self):
         return None
@@ -199,12 +220,12 @@ def experiment(dataset_config: DatasetConfig, model_config: ModelConfig, train_c
     base_kernel = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
 
-
+    mean_constant = gp_config.mean_constant
     length_scale = gp_config.length_scale
     noise_var = gp_config.noise_var
     output_scale = gp_config.output_scale
 
-    mean_module.constant = 0.0
+    mean_module.constant = mean_constant
     base_kernel.base_kernel.lengthscale = length_scale
     base_kernel.outputscale = output_scale
     likelihood.noise_covar.noise = noise_var
@@ -220,7 +241,7 @@ def experiment(dataset_config: DatasetConfig, model_config: ModelConfig, train_c
     
     return var_square_loss
 
-def policy_gradient_train(gp_model, init_train_x, init_train_y, pool_x, pool_y, test_x, test_y, model_config, train_config, gp_config, Predictor, if_baseline = False):
+def policy_gradient_train(gp_model, init_train_x, init_train_y, pool_x, pool_y, test_x, test_y, model_config, train_config, gp_config, Predictor):
 
     pool_size = pool_x.size(0)
     reciprocal_size_value =  math.log(1.0 / pool_size)
@@ -240,12 +261,14 @@ def policy_gradient_train(gp_model, init_train_x, init_train_y, pool_x, pool_y, 
         #state = env.reset() # reset env, state currenly not needed
         #env.render()
 
+        env.resample_pool_y()   # fixed across the G_samples rollouts of this episode
+
         for t in range(1):
             w = policy.squeeze()
             prob = F.softmax(w, dim=0)
             print("w:",w)
             print("prob:",prob)   
-            #loss_temp = []
+            
             logpr_list = []
             loss_list = []
             for j in range(train_config.G_samples):
@@ -258,23 +281,25 @@ def policy_gradient_train(gp_model, init_train_x, init_train_y, pool_x, pool_y, 
                 mean, loss, done = env.step(action) # env step, uq update
                 print("log_pr:", log_pr)
                 print("loss:", loss)
-                #loss_temp.append(log_pr*loss)
                 logpr_list.append(log_pr)
                 loss_list.append(loss)
                 env.reset()
 
-            #avg_loss = torch.stack(loss_temp).mean()
+            # Convert to tensors
             loss_tensor = torch.stack(loss_list)
             logpr_tensor = torch.stack(logpr_list)
 
-
-            if if_baseline:
-                baseline = loss_tensor.mean().detach()
+            # REINFORCE with baseline (if enabled)
+            if model_config.use_baseline:
+                baseline = loss_tensor.mean().detach()  # Use mean as baseline
+                print("baseline:", baseline)
             else:
                 baseline = torch.zeros_like(loss_tensor.mean())
 
-
+            # Compute advantage
             adv = loss_tensor - baseline
+
+            # Policy gradient with advantage
             avg_loss = (logpr_tensor * adv).mean()
 
             optimizer.zero_grad()
@@ -330,12 +355,12 @@ def experiment(dataset_config: DatasetConfig, model_config: ModelConfig, train_c
     base_kernel = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
 
-
+    mean_constant = gp_config.mean_constant
     length_scale = gp_config.length_scale
     noise_var = gp_config.noise_var
     output_scale = gp_config.output_scale
 
-    mean_module.constant = 0.0
+    mean_module.constant = mean_constant
     base_kernel.base_kernel.lengthscale = length_scale
     base_kernel.outputscale = output_scale
     likelihood.noise_covar.noise = noise_var

@@ -81,10 +81,10 @@
          "values": [5]
     },
     "temp_k_subset":{
-         "values": [10]
+         "values": [0.1]
     },
     "meta_opt_lr":{
-         "values": [10.0,100.0,1,0.5]
+         "values": [0.1]
     },
     "meta_opt_weight_decay":{
          "values": [0.0]
@@ -135,7 +135,7 @@
 		"values": [0]
     },
     "seed_training":{
-		"values": [0]
+		"values": [0,1,2,3,4,5,6,7,8,9]
     },
         "no_horizons":{
         "values": [10]
