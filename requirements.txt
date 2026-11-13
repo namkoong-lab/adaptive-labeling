@@ -8,6 +8,4 @@ matplotlib==3.11.2
 tabpfn==9.2.0
 # only for experiments/ensemble_plus/benchmark_pathwise_speed.py
 torchopt==0.7.3
-# only for experiments/gp/gradient_quality.py --setup polyadic (the first version's data generator)
-gpytorch==1.15.2
 # Kumo-Tabular: NVIDIA's structured-data-models 0.2.1 (with pyarrow), installed from its GitHub release; see README.md.

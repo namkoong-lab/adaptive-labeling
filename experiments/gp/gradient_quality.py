@@ -20,13 +20,7 @@ Reported: the expected cosine similarity between an N-rollout estimate and the t
 N-rollout estimate uses N distinct bank entries, so it has exactly the distribution of a fresh estimate (estimates for
 large N share some entries, which only makes their standard error optimistic).
 
---setup polyadic is the setting of the paper's first version of this study: the synthetic problem of its polyadic sampler
-(data.make_polyadic_gp_problem, reproduced bitwise; its labels are not draws from the stated GP prior, see that function),
-a constant-zero predictor, the true pool labels in the rollouts and a GP jitter of 1e-5.  --predictor and --labels override
-either setup's choice (output names then carry a suffix).
-
   python gradient_quality.py --gpu 0
-  python gradient_quality.py --setup polyadic --gpu 0
   python -m adaptive_sampling_lib.plot_gradient_quality --json <output json>
 """
 import argparse
@@ -52,11 +46,7 @@ JITTER = 1e-5  # GPModule._draw adds this to the posterior covariance before dra
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--setup", default="paper", choices=["paper", "polyadic"])
-    p.add_argument("--predictor", default=None, choices=["trained", "zero"], help="default: trained (paper), zero (polyadic)")
-    p.add_argument("--labels", default=None, choices=["imagined", "true"],
-                   help="pool labels in the rollouts; default: one imagined draw from the posterior (paper), the true labels (polyadic)")
-    p.add_argument("--dataset", default="synthetic", choices=["synthetic", "eicu"], help="paper setup only")
+    p.add_argument("--dataset", default="synthetic", choices=["synthetic", "eicu"])
     p.add_argument("--input_dim", type=int, default=1)
     p.add_argument("--seed_dataset", type=int, default=0)
     p.add_argument("--seed", type=int, default=0, help="imagined labels, rollouts and Monte Carlo draws")
@@ -77,22 +67,6 @@ def main():
     rargs = run.add_args(argparse.ArgumentParser()).parse_args(
         ["--method", "pathwise", "--dataset", a.dataset, "--input_dim", str(a.input_dim), "--seed_dataset", str(a.seed_dataset)])
     prob, target, uq, _ = run.build(rargs, dev)
-    defaults = {"paper": ("trained", "imagined"), "polyadic": ("zero", "true")}[a.setup]
-    predictor, labels = a.predictor or defaults[0], a.labels or defaults[1]
-    if a.setup == "polyadic":
-        from adaptive_sampling_lib.data import make_polyadic_gp_problem
-        from adaptive_sampling_lib.uq_gp import GPModule
-        prob = make_polyadic_gp_problem(a.seed_dataset).to(dev)
-        uq = GPModule(1.0, 0.69, 0.01, 0.0, 1e-5, device=dev)
-        if predictor == "trained":
-            from adaptive_sampling_lib.predictor import train_predictor, predictor_outputs
-            from adaptive_sampling_lib.targets import MSETarget
-            target = MSETarget(predictor_outputs(train_predictor(prob.train_x, prob.train_y, "regression", seed=42, device=dev),
-                                                 prob.eval_x, "regression"), noise_var=uq.nv)
-    if predictor == "zero":
-        from adaptive_sampling_lib.targets import MSETarget
-        target = MSETarget(torch.zeros(prob.eval_x.shape[0], device=dev), noise_var=uq.nv)
-    print(f"setup {a.setup}: predictor {predictor}, rollout labels {labels}, problem {prob.summary()}", flush=True)
     state = uq.condition(prob.train_x, prob.train_y)
     pool_x, eval_x = prob.pool_x, uq._t(prob.eval_x)
     n, b = pool_x.shape[0], a.b
@@ -100,8 +74,6 @@ def main():
     theta = torch.full((n,), math.log(1.0 / n), device=dev)  # the planners' initial (uniform) logits
     gen = torch.Generator(device=dev).manual_seed(a.seed)
     ybar = uq.sample_pool_labels(state, pool_x, 1, gen)[0]  # one imagined label vector, shared by every rollout
-    if labels == "true":
-        ybar = uq._t(prob.pool_y)
     I_eval = torch.eye(eval_x.shape[0], device=dev, dtype=eval_x.dtype)
 
     def hard_subsets(B, g):  # B ordered draws from pi_theta (Gumbel-top-b, as subset.sample_hard_subset)
@@ -196,8 +168,7 @@ def main():
         return 0.0 if nv == 0 else float(v @ g_true / (nv * g_true.norm()))
 
     names = ["reinforce", "reinforce_baseline"] + [f"pathwise_tau{t}" for t in a.taus]
-    res = {"belief": "GP", "setup": a.setup, "predictor": predictor, "labels": labels,
-           "dataset": ("polyadic synthetic, d = 1" if a.setup == "polyadic" else a.dataset if a.dataset == "eicu" else f"synthetic, d = {a.input_dim}"),
+    res = {"belief": "GP", "dataset": a.dataset if a.dataset == "eicu" else f"synthetic, d = {a.input_dim}",
            "seed_dataset": a.seed_dataset, "n_ref": a.n_ref, "reps": a.reps, "bank": a.bank, "Ns": a.Ns, "b": b, "pool": n,
            "n_mc": a.n_mc, "taus": a.taus, "ref_noise_to_signal": se / float(g_true.norm()), "cos": {}, "cos_of_bank_mean": {}}
     bank_mean = {"reinforce": (hard_R.unsqueeze(-1) * hard_S).mean(0),
@@ -220,9 +191,7 @@ def main():
             res["cos"][f"{k}@N{N}"] = {"mean": float(v.mean()), "se": float(v.std() / math.sqrt(len(v)))}
         print(f"N={N:5d}  " + "  ".join(f"{k} {res['cos'][f'{k}@N{N}']['mean']:+.3f}" for k in names), flush=True)
     print("cos(bank mean, true gradient): " + "  ".join(f"{k} {v:+.3f}" for k, v in res["cos_of_bank_mean"].items()))
-    tag = (f"polyadic_ds{a.seed_dataset}" if a.setup == "polyadic" else "eicu" if a.dataset == "eicu" else f"dim{a.input_dim}_ds{a.seed_dataset}")
-    if (predictor, labels) != defaults:
-        tag += f"_{predictor}_{labels}"
+    tag = "eicu" if a.dataset == "eicu" else f"dim{a.input_dim}_ds{a.seed_dataset}"
     out = a.out or results("gp_high_dim", "gradient_quality", f"gradient_quality_{tag}.json")
     save_json(res, out)
     print("saved", out)
