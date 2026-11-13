@@ -7,7 +7,8 @@ and without a baseline; the baselines are random and uncertainty sampling.  The 
 process, an `Ensemble+` network ensemble, or a tabular foundation model (TabPFN v2.5, Kumo-Tabular).
 
 This branch (`revision-oct2026`) is the internal superset: every experiment of the revision, including those not in the
-paper (Ensemble+, TabPFN).  Results, reports and the experiment log are kept outside git.
+paper (Ensemble+, TabPFN).  `paper_results/` holds the paper's figures and tables and one compact JSON per run of the
+documented grids; the full results (with the planners' per-step logs), reports and the experiment log are kept outside git.
 
 ## Layout
 
@@ -26,6 +27,7 @@ experiments/
   tabpfn/                    TabPFN v2.5 as the belief: regression/ and classification/
   kumo/                      Kumo-Tabular medium as the belief: regression/ and classification/
 paper_figures/               the paper's experiment figures and tables from the result JSONs
+paper_results/               those figures and tables, and the per-run results behind them (see its README)
 ```
 
 Each experiment folder has a `run.py` (one run), a `make_jobs.py` (a job list; `--grid` gives the grids we ran) and its
@@ -147,4 +149,5 @@ epoch, and `agreement.py` compares variance criteria on candidate batches.
 
 `make_figures.py` draws the GP-in-R^d and Kumo-Tabular figures, the tables and `summary.txt` (the numbers quoted in the
 text); `make_gp_extra_figures.py` draws the GP eICU, rollouts-per-estimate and gradient-quality figures.  Both read the
-results root and write to `paper_figures/output/` (or `--out <folder>`, e.g. the paper's figure folder).
+results root and write to `paper_figures/output/` (or `--out <folder>`, e.g. the paper's figure folder).  `export_runs.py` copies the runs of the
+documented grids into `paper_results/runs/`; `ADAPTIVE_SAMPLING_RESULTS=paper_results/runs` redraws everything from them.

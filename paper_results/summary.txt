@@ -1,0 +1,137 @@
+== GP, d = 1 (twenty draws): final variance and RMSE vs random; paired comparisons
+  low  random             var(t=10)=2.5487  var vs random   +0.0%  RMSE ratio 1.00
+  low  pathwise           var(t=10)=0.1769  var vs random  -93.4%  RMSE ratio 0.35
+  low  uncertainty        var(t=10)=3.5481  var vs random  +24.5%  RMSE ratio 1.40
+  low  reinforce          var(t=10)=3.2968  var vs random  +25.5%  RMSE ratio 1.19
+  low  uncertainty_seq    var(t=10)=0.1735  var vs random  -93.1%  RMSE ratio 0.27
+  low  reinforce_baseline var(t=10)=0.8966  var vs random  -67.4%  RMSE ratio 0.54
+  low  PW vs reinforce_baseline:  -79.6% (s.e. log 0.113), lower on 20/20
+  low  PW vs reinforce         :  -94.7% (s.e. log 0.096), lower on 20/20
+  low  PW vs uncertainty_seq   :   -3.5% (s.e. log 0.073), lower on 10/20
+  high random             var(t=10)=2.5487  var vs random   +0.0%  RMSE ratio 1.00
+  high pathwise           var(t=10)=0.1102  var vs random  -95.5%  RMSE ratio 0.31
+  high uncertainty        var(t=10)=3.5481  var vs random  +24.5%  RMSE ratio 1.40
+  high reinforce          var(t=10)=0.5913  var vs random  -78.8%  RMSE ratio 0.52
+  high uncertainty_seq    var(t=10)=0.1735  var vs random  -93.1%  RMSE ratio 0.27
+  high reinforce_baseline var(t=10)=0.1282  var vs random  -95.2%  RMSE ratio 0.24
+  high PW vs reinforce_baseline:   -5.8% (s.e. log 0.049), lower on 14/20
+  high PW vs reinforce         :  -78.6% (s.e. log 0.098), lower on 20/20
+  high PW vs uncertainty_seq   :  -34.1% (s.e. log 0.100), lower on 18/20
+== GP pooled over all dimensions (120 draws)
+  low  PW vs reinforce_baseline:  -69.5%, lower on 120/120
+  low  PW vs reinforce         :  -88.1%, lower on 120/120
+  low  PW vs uncertainty_seq   :  -16.8%, lower on 102/120
+  low  PW vs random            :  -86.9%, lower on 120/120
+     d=  1 PW vs U-seq   -3.5% (10/20); PW vs Rb  -79.6% (20/20)
+     d=  5 PW vs U-seq  -21.3% (17/20); PW vs Rb  -71.7% (20/20)
+     d= 10 PW vs U-seq  -19.9% (19/20); PW vs Rb  -66.4% (20/20)
+     d= 20 PW vs U-seq  -20.2% (19/20); PW vs Rb  -64.8% (20/20)
+     d= 50 PW vs U-seq  -19.2% (19/20); PW vs Rb  -65.8% (20/20)
+     d=100 PW vs U-seq  -15.5% (18/20); PW vs Rb  -65.6% (20/20)
+  high PW vs reinforce_baseline:  -15.7%, lower on 111/120
+  high PW vs reinforce         :  -67.2%, lower on 120/120
+  high PW vs uncertainty_seq   :  -31.7%, lower on 116/120
+  high PW vs random            :  -89.3%, lower on 120/120
+     d=  1 PW vs U-seq  -34.1% (18/20); PW vs Rb   -5.8% (14/20)
+     d=  5 PW vs U-seq  -37.2% (20/20); PW vs Rb  -20.6% (20/20)
+     d= 10 PW vs U-seq  -32.3% (20/20); PW vs Rb  -18.2% (19/20)
+     d= 20 PW vs U-seq  -34.1% (19/20); PW vs Rb  -21.1% (20/20)
+     d= 50 PW vs U-seq  -28.3% (20/20); PW vs Rb  -14.7% (20/20)
+     d=100 PW vs U-seq  -23.6% (19/20); PW vs Rb  -12.7% (18/20)
+== Kumo regression: pooled over real datasets (all splits)
+  low  PW vs reinforce_baseline:  -19.2% (s.e. log 0.062), lower on 31/40
+  low  PW vs reinforce         :  -21.0% (s.e. log 0.061), lower on 29/40
+  low  PW vs random            :  -27.2% (s.e. log 0.088), lower on 29/40
+  low  PW vs uncertainty       :  -16.9% (s.e. log 0.065), lower on 28/40
+  low  PW vs uncertainty_seq   :  -14.8% (s.e. log 0.054), lower on 26/40
+     eICU                 PW vs best baseline (uncertainty_seq)  -15.5% (5/10); vs Rb  -16.5% (6/10)
+     California           PW vs best baseline (uncertainty)  -26.4% (8/10); vs Rb  -12.2% (8/10)
+     Bike                 PW vs best baseline (uncertainty_seq)   -1.8% (5/10); vs Rb  -33.8% (9/10)
+     MIMIC-IV LOS         PW vs best baseline (uncertainty)   -8.1% (6/10); vs Rb  -12.1% (8/10)
+  high PW vs reinforce_baseline:  -16.0% (s.e. log 0.055), lower on 27/40
+  high PW vs reinforce         :  -13.4% (s.e. log 0.077), lower on 21/40
+  high PW vs random            :  -37.3% (s.e. log 0.092), lower on 36/40
+  high PW vs uncertainty       :  -28.5% (s.e. log 0.058), lower on 34/40
+  high PW vs uncertainty_seq   :  -26.6% (s.e. log 0.058), lower on 30/40
+     eICU                 PW vs best baseline (uncertainty_seq)  -22.5% (5/10); vs Rb   -5.4% (6/10)
+     California           PW vs best baseline (uncertainty)  -33.0% (8/10); vs Rb  -27.6% (7/10)
+     Bike                 PW vs best baseline (uncertainty_seq)  -25.6% (7/10); vs Rb  -18.8% (7/10)
+     MIMIC-IV LOS         PW vs best baseline (uncertainty)  -20.1% (8/10); vs Rb  -10.2% (7/10)
+   planner wall time per decision epoch (s, mean over runs):
+     low  reinforce               6.9
+     low  reinforce_baseline      6.1
+     low  pathwise               11.2
+     high reinforce              65.8
+     high reinforce_baseline     67.0
+     high pathwise              154.3
+== Kumo classification: pooled over real datasets (all splits)
+  low  PW vs reinforce_baseline:  -28.3% (s.e. log 0.072), lower on 32/40
+  low  PW vs reinforce         :  -21.5% (s.e. log 0.075), lower on 29/40
+  low  PW vs random            :  -38.9% (s.e. log 0.073), lower on 36/40
+  low  PW vs uncertainty       :  -40.6% (s.e. log 0.106), lower on 34/40
+  low  PW vs uncertainty_seq   :  -36.8% (s.e. log 0.097), lower on 33/40
+     eICU                 PW vs best baseline (random)  -34.2% (8/10); vs Rb  -40.0% (9/10)
+     MAGIC                PW vs best baseline (uncertainty_seq)  -42.4% (9/10); vs Rb  -27.2% (8/10)
+     Credit               PW vs best baseline (uncertainty_seq)  -28.6% (8/10); vs Rb  -22.1% (6/10)
+     MIMIC-IV mortality   PW vs best baseline (uncertainty_seq)  -18.1% (8/10); vs Rb  -22.4% (9/10)
+  high PW vs reinforce_baseline:   -4.6% (s.e. log 0.052), lower on 21/40
+  high PW vs reinforce         :   +2.8% (s.e. log 0.090), lower on 20/40
+  high PW vs random            :  -47.7% (s.e. log 0.064), lower on 38/40
+  high PW vs uncertainty       :  -49.2% (s.e. log 0.100), lower on 36/40
+  high PW vs uncertainty_seq   :  -46.0% (s.e. log 0.093), lower on 36/40
+     eICU                 PW vs best baseline (random)  -43.4% (8/10); vs Rb   -7.4% (5/10)
+     MAGIC                PW vs best baseline (uncertainty_seq)  -53.5% (9/10); vs Rb   -3.2% (6/10)
+     Credit               PW vs best baseline (uncertainty_seq)  -42.5% (9/10); vs Rb  -13.4% (6/10)
+     MIMIC-IV mortality   PW vs best baseline (uncertainty_seq)  -21.8% (8/10); vs Rb   +6.7% (4/10)
+   planner wall time per decision epoch (s, mean over runs):
+     low  reinforce              18.1
+     low  reinforce_baseline     18.2
+     low  pathwise               19.0
+     high reinforce              76.8
+     high reinforce_baseline     77.7
+     high pathwise              187.5
+== Label savings of the pathwise planner (factor = times fewer labels to reach the same variance)
+-- GP: final stage / best stage, against random | U static | U sequential | strongest baseline | REINFORCE with baseline at the same budget
+   low d=1                             5.0/ 5.0 |  5.0/ 9.0 |  1.0/ 3.0 |  1.0/ 3.0 |  2.5/ 2.5   (strongest: uncertainty_seq)
+   low d=5                             5.0/ 6.0 |  5.0/ 9.0 |  1.1/ 2.0 |  1.1/ 2.0 |  3.3/ 3.3   (strongest: uncertainty_seq)
+   low d=10                            5.0/ 6.0 |  5.0/ 7.0 |  1.2/ 2.0 |  1.2/ 2.0 |  2.5/ 2.5   (strongest: uncertainty_seq)
+   low d=20                            5.0/ 9.0 |  3.3/ 7.0 |  1.2/ 2.0 |  1.2/ 2.0 |  2.5/ 3.0   (strongest: uncertainty_seq)
+   low d=50                           10.0/10.0 |  2.5/ 5.0 |  1.2/ 2.0 |  1.2/ 2.0 |  2.5/ 3.0   (strongest: uncertainty_seq)
+   low d=100                          10.0/10.0 |  3.3/ 3.3 |  1.2/ 2.0 |  1.2/ 2.0 |  2.5/ 3.0   (strongest: uncertainty_seq)
+   high d=1                            5.0/ 9.0 | 10.0/10.0 |  1.2/ 4.0 |  1.2/ 4.0 |  1.1/ 1.1   (strongest: uncertainty_seq)
+   high d=5                           10.0/10.0 | 10.0/10.0 |  1.7/ 2.0 |  1.7/ 2.0 |  1.2/ 1.2   (strongest: uncertainty_seq)
+   high d=10                          10.0/10.0 | 10.0/10.0 |  1.4/ 2.0 |  1.4/ 2.0 |  1.2/ 1.3   (strongest: uncertainty_seq)
+   high d=20                          10.0/10.0 |  5.0/ 8.0 |  1.7/ 3.0 |  1.7/ 3.0 |  1.2/ 1.3   (strongest: uncertainty_seq)
+   high d=50                          10.0/10.0 |  3.3/ 5.0 |  1.4/ 3.0 |  1.4/ 3.0 |  1.2/ 1.3   (strongest: uncertainty_seq)
+   high d=100                         10.0/10.0 |  5.0/ 5.0 |  1.4/ 3.0 |  1.4/ 3.0 |  1.2/ 1.2   (strongest: uncertainty_seq)
+   GP vs random          : up to 10.0x, 8.52x on average (best stage per setting; final-stage average 7.49x)
+   GP vs uncertainty     : up to 10.0x, 6.97x on average (best stage per setting; final-stage average 5.07x)
+   GP vs uncertainty_seq : up to 4.0x, 2.43x on average (best stage per setting; final-stage average 1.32x)
+   GP vs strongest       : up to 4.0x, 2.43x on average (best stage per setting; final-stage average 1.32x)
+   GP vs random          : 9.83x on average over the high-compute settings (best stage), as reported in the paper
+   GP vs strongest       : 2.75x on average over the high-compute settings (best stage), as reported in the paper
+   GP vs REINFORCE with baseline, low compute: up to 3.3x (best stage), final stage 2.5-3.3x
+   GP vs REINFORCE with baseline, high compute: up to 1.3x (best stage), final stage 1.1-1.2x
+-- Kumo-Tabular: final stage / best stage, against random | U static | U sequential | strongest baseline | REINFORCE with baseline at the same budget
+   low reg eICU                        2.5/ 2.7 |  3.3/ 5.0 |  2.5/ 4.0 |  2.5/ 4.0 |  2.5/ 3.0   (strongest: uncertainty_seq)
+   low reg California                  5.0/ 5.0 |  3.3/ 4.5 |  5.0/ 5.0 |  3.3/ 4.5 |  2.5/ 2.5   (strongest: uncertainty)
+   low reg Bike                        2.5/ 6.0 |  1.2/ 2.0 |  1.0/ 1.4 |  1.0/ 1.4 |  2.0/ 4.0   (strongest: uncertainty_seq)
+   low reg MIMIC-IV LOS                5.0/ 5.0 |  1.4/ 1.5 |  1.4/ 4.5 |  1.4/ 1.5 |  1.4/ 4.5   (strongest: uncertainty)
+   high reg eICU                       2.0/ 2.7 |  2.0/ 3.0 |  2.0/ 3.5 |  2.0/ 3.5 |  1.1/ 1.7   (strongest: uncertainty_seq)
+   high reg California                 2.5/ 2.5 |  2.5/ 2.5 |  2.5/ 2.5 |  2.5/ 2.5 |  2.0/ 2.0   (strongest: uncertainty)
+   high reg Bike                       1.7/ 1.8 |  1.2/ 1.2 |  1.1/ 1.2 |  1.1/ 1.2 |  1.1/ 1.1   (strongest: uncertainty_seq)
+   high reg MIMIC-IV LOS               2.5/ 4.0 |  2.0/ 2.2 |  2.5/ 3.0 |  2.0/ 2.2 |  1.2/ 2.0   (strongest: uncertainty)
+   low cla eICU                        3.3/ 3.3 |  5.0/ 8.0 |  5.0/ 5.0 |  3.3/ 3.3 |  3.3/ 5.0   (strongest: random)
+   low cla MAGIC                       2.0/ 2.0 |  2.5/ 3.0 |  2.0/ 2.0 |  2.0/ 2.0 |  1.7/ 1.7   (strongest: uncertainty_seq)
+   low cla Credit                      3.3/ 3.5 |  3.3/ 3.3 |  3.3/ 3.3 |  3.3/ 3.3 |  1.4/ 2.0   (strongest: uncertainty_seq)
+   low cla MIMIC-IV mortality          3.3/ 3.5 |  1.7/ 2.0 |  1.7/ 2.0 |  1.7/ 2.0 |  1.7/ 3.0   (strongest: uncertainty_seq)
+   high cla eICU                       5.0/ 5.0 |  5.0/ 8.0 |  5.0/ 6.0 |  5.0/ 5.0 |  1.0/ 1.5   (strongest: random)
+   high cla MAGIC                      2.5/ 3.5 |  5.0/ 5.0 |  2.5/ 3.5 |  2.5/ 3.5 |  1.1/ 1.1   (strongest: uncertainty_seq)
+   high cla Credit                     3.3/ 7.0 |  3.3/ 3.3 |  3.3/ 3.3 |  3.3/ 3.3 |  1.1/ 2.0   (strongest: uncertainty_seq)
+   high cla MIMIC-IV mortality         3.3/ 3.3 |  1.4/ 1.7 |  1.4/ 1.7 |  1.4/ 1.7 |  1.0/ 1.0   (strongest: uncertainty_seq)
+   Kumo-Tabular vs random          : up to 7.0x, 3.55x on average (best stage per setting; final-stage average 2.95x)
+   Kumo-Tabular vs uncertainty     : up to 8.0x, 3.03x on average (best stage per setting; final-stage average 2.48x)
+   Kumo-Tabular vs uncertainty_seq : up to 6.0x, 2.93x on average (best stage per setting; final-stage average 2.34x)
+   Kumo-Tabular vs strongest       : up to 5.0x, 2.58x on average (best stage per setting; final-stage average 2.20x)
+   Kumo-Tabular vs REINFORCE with baseline, low compute: up to 5.0x (best stage), final stage 1.4-3.3x
+   Kumo-Tabular vs REINFORCE with baseline, high compute: up to 2.0x (best stage), final stage 1.0-2.0x
