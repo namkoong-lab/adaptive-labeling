@@ -205,8 +205,8 @@ def _read_xy(csv_dir, name):
 
 
 def load_eicu_regression_problem(csv_dir: str = EICU_REG_DIR) -> Problem:
-    """The paper's eICU regression split (100 train from one k-means cluster, 500 pool, 285 eval;
-    10 standardized features; label = random-forest predicted in-hospital mortality probability)."""
+    """The paper's eICU regression split (100 train from one k-means cluster, 388 pool, 500 eval of which the runs use the
+    first 285; 10 standardized features; label = random-forest predicted in-hospital mortality probability)."""
     train_x, train_y = _read_xy(csv_dir, "train")
     pool_x, pool_y = _read_xy(csv_dir, "pool")
     eval_x, eval_y = _read_xy(csv_dir, "test")

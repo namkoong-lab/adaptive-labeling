@@ -6,8 +6,8 @@ clusters, 100 initial labels from one cluster, a pool of 500 and an evaluation s
 belief is a GP with the generating hyperparameters (lengthscale 1, outputscale 0.69, noise sd 0.1), and the error metric
 uses the denoised target value of the generating GP.  The geometry-preserving scaling to R^d is described in
 adaptive_sampling_lib.data.make_synthetic_gp_problem.
---dataset eicu: the paper's eICU split (100 initial labels from one k-means cluster, pool 500, evaluation set 285, 10
-standardised features; label = random-forest predicted in-hospital mortality probability) with the GP hyperparameters
+--dataset eicu: the paper's eICU split (100 initial labels from one k-means cluster, a pool of 388 and the first 285 of
+the 500 evaluation rows, 10 standardised features; label = random-forest predicted in-hospital mortality probability) with the GP hyperparameters
 fitted in the paper (lengthscale 0.5, outputscale 1, noise variance 1e-4, prior mean 0.255); the error metric uses the
 evaluation labels.
 
