@@ -1,0 +1,25 @@
+# Python environment and caches (the runs use /shared/share_mala/daksh/adaptive_sampling_experiments/.venv)
+.venv/
+__pycache__/
+*.pyc
+
+# Experiment logs and run tracking; results live on shared storage (see EXPERIMENTS_OCT2026.md)
+*.log
+logs/
+logs_tabpfn/
+logs_mimic/
+wandb/
+
+# Large, regenerable gradient-diagnostic cache (gp_pipeline_regression/gradient_estimator_diagnostics.py)
+gp_pipeline_regression/grad_diag_cache/
+
+# LaTeX build files
+*.aux
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+
+# Editor settings
+.vscode/

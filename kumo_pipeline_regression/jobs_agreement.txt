@@ -1,0 +1,3 @@
+# (a) vs (b) agreement on hard candidate batches (kumo_pipeline_regression/agreement.py)
+{PY} /user/dm3766/Adaptive_sampling/kumo_pipeline_regression/agreement.py --task regression --gpu 0 ## /shared/share_mala/daksh/adaptive_sampling_experiments/results/diagnostics/stage1/agreement_regression.json.done
+{PY} /user/dm3766/Adaptive_sampling/kumo_pipeline_regression/agreement.py --task classification --gpu 0 ## /shared/share_mala/daksh/adaptive_sampling_experiments/results/diagnostics/stage1/agreement_classification.json.done

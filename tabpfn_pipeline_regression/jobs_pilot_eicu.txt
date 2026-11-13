@@ -1,0 +1,11 @@
+{PY} /user/dm3766/Adaptive_sampling/tabpfn_pipeline_regression/run.py --dataset eicu --method random --seed 0 --n_steps 1 --tag pilot_low --gpu 0
+{PY} /user/dm3766/Adaptive_sampling/tabpfn_pipeline_regression/run.py --dataset eicu --method random --seed 1 --n_steps 1 --tag pilot_low --gpu 0
+{PY} /user/dm3766/Adaptive_sampling/tabpfn_pipeline_regression/run.py --dataset eicu --method uncertainty --seed 0 --n_steps 1 --tag pilot_low --gpu 0
+{PY} /user/dm3766/Adaptive_sampling/tabpfn_pipeline_regression/run.py --dataset eicu --method uncertainty_seq --seed 0 --n_steps 1 --tag pilot_low --gpu 0
+{PY} /user/dm3766/Adaptive_sampling/tabpfn_pipeline_regression/run.py --dataset eicu --method reinforce_baseline --seed 0 --n_steps 50 --tag pilot_high --gpu 0
+{PY} /user/dm3766/Adaptive_sampling/tabpfn_pipeline_regression/run.py --dataset eicu --method reinforce --seed 0 --n_steps 50 --tag pilot_high --gpu 0
+{PY} /user/dm3766/Adaptive_sampling/tabpfn_pipeline_regression/run.py --dataset eicu --method pathwise --seed 0 --n_steps 50 --tag pilot_high --gpu 0
+{PY} /user/dm3766/Adaptive_sampling/tabpfn_pipeline_regression/run.py --dataset eicu --method pathwise --seed 0 --n_steps 1 --tag pilot_low --gpu 0
+{PY} /user/dm3766/Adaptive_sampling/tabpfn_pipeline_regression/run.py --dataset eicu --method reinforce_baseline --seed 0 --n_steps 1 --tag pilot_low --gpu 0
+{PY} /user/dm3766/Adaptive_sampling/tabpfn_pipeline_regression/run.py --dataset eicu --method reinforce_baseline --seed 1 --n_steps 50 --tag pilot_high --gpu 0
+{PY} /user/dm3766/Adaptive_sampling/tabpfn_pipeline_regression/run.py --dataset eicu --method pathwise --seed 1 --n_steps 50 --tag pilot_high --gpu 0

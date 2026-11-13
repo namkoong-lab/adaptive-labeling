@@ -1,0 +1,8 @@
+# researchgpu04 stage-1 diagnostics: GPU 1 (spare) and the grid GPUs with the grid caps (cap_by_running _pipeline_ counts all jobs)
+1 3
+2 3
+3 4
+5 4
+6 4
+7 4
+4 3
