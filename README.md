@@ -1,140 +1,135 @@
-# **Adaptive Labeling for Efficient Out-of-Distribution Model Evaluation**
+# Adaptive Measurement via Posterior Variance Minimization
 
-## Introduction
+Code for the experiments of the paper *Adaptive Measurement via Posterior Variance Minimization*.  A planner chooses which
+points to label so that the posterior variance of a target quantity, here the error of a fixed predictor on a shifted
+population, falls as fast as possible.  The planners optimise a one-step lookahead objective with a smoothed pathwise
+(autodiff) policy gradient or with REINFORCE (with and without a baseline); the baselines are random and uncertainty
+sampling.  The belief over the labels is a Gaussian process or a tabular foundation model (Kumo-Tabular, TabPFN v2.5).
 
-Supervised data suffers severe selection bias when labels are expensive. We formulate a MDP over posterior beliefs on model performance and solve it with pathwise policy gradients computed through an auto-differentiable pipeline. The paper is available [here](https://openreview.net/pdf?id=uuQQwrjMzb).
+The code of the paper's first version is in the history of this repository (commit `15cb875` and earlier).
 
-**Key Features:**
-- Adaptive Labeling - MDPs with combinatorial action space
-- Uncertainty Quantification - Gaussian Processes, Deep Learning based UQ methodologies (Ensembles, Ensemble+, ENNs)
-- Policy parametrization through K-subset sampling
-- Policy gradients through Autodiff - Smoothed differentiable pipeline 
+## Layout
 
----
-
-## Table of Contents
-
-1. [Project Structure](#project-structure)
-2. [Installation](#installation)
-3. [Creating the Environment](#creating-the-environment)
-4. [Running the Project](#running-the-project)
-
----
-
-## Project Structure
-
-```plaintext
-Project_Name/
-│
-├── Main/                    # Source code for the project
-│   ├── gp_experiments
-│   │    ├── gp_pipeline_regression
-│   │    │     ├── run_pipeline_long_horizon.py
-│   │    │     ├── run_pipeline_pg_long_horizon.py
-│   │    │     ├── run_pipeline_active_learning_long_horizon.py
-│   │    │     └── .... 
-│   │    │       
-│   │    └── gp_pipeline_regression_real_data
-│   │          ├── run_pipeline_long_horizon.py
-│   │          ├── run_pipeline_pg_long_horizon.py
-│   │          ├── run_pipeline_active_learning_long_horizon.py
-│   │          └── .... 
-│   └── ensemble_plus_experiments
-│          ├── ensemble_plus_pipeline_regression
-│          │       ├── run_enn_pipeline_1a.py
-│          │       ├── run_pipeline_pg_ensemble_plus_long_horizon.py
-│          │       └── ....
-│          └── ensemble_plus_pipeline_regression_active_learning
-│                  ├── run_enn_pipeline_1a_active_learning.py
-│                  └── ....
-│    
-│
-├── src/                   # Source code for ongoing research (under development)
-│   ├── autodiff           # Autodiff (Smoothed-Differentiable) pipeline development - different UQ methodologies, integration with baselines
-│   │     ├── gp
-│   │     ├── ensemble_plus
-│   │     ├── enn
-│   │     └── deprecated    # Deprecated code
-│   ├── baselines          # REINFORCE based policy gradient pipeline development
-│   └──  notebooks          # Notebooks for unit tests, testing individual components of the pipeline
-│
-├── requirements.txt        # List of dependencies
-└──  README.md               # Project documentation
+```
+adaptive_sampling_lib/       shared library
+  planners.py                pathwise and REINFORCE planners, uncertainty baselines
+  runner.py                  the multi-epoch acquisition loop; writes one JSON per run
+  uq_gp.py uq_tabpfn.py uq_kumo.py                   beliefs, each with a differentiable weighted-context update
+  data.py targets.py predictor.py subset.py          problems, targets, the evaluated predictor, soft top-k
+  launch.py                  runs a job list on several GPUs
+  aggregate.py plot_runs.py plot_gradient_quality.py curves, tables and figures from the result JSONs
+  paths.py                   where results, data and model weights live (environment variables)
+experiments/
+  gp/                        GP regression: synthetic in R^d (d = 1 ... 100) and eICU; the gradient-quality study
+  kumo/                      Kumo-Tabular as the belief: regression/ and classification/
+  tabpfn/                    TabPFN v2.5 as the belief: regression/ and classification/ (the Kumo runners build on these)
+paper_figures/               the paper's experiment figures and tables from the result JSONs
 ```
 
----
+Each experiment folder has a `run.py` (one run), a `make_jobs.py` (a job list; `--grid` gives the paper's grids) and its
+checks and analysis scripts.
 
-## Installation
+## Setup
 
-1. **Clone the repository:**
+Python 3.12 and a CUDA GPU.  `pip install -r requirements.txt` installs the versions used for the paper.
 
-   ```bash
-   git clone https://github.com/namkoong-lab/adaptive-labeling.git
-   cd adaptive-labeling
-   ```
+- **Kumo-Tabular** needs NVIDIA's `structured-data-models` 0.2.1 (wheel from
+  <https://github.com/NVIDIA/structured-data-models/releases>), installed into the environment or into
+  `$ADAPTIVE_SAMPLING_MODEL_CACHE/sdm_pkgs` (`pip install --target ... structured_data_models-0.2.1-py3-none-any.whl`).
+  Its weights are downloaded from Hugging Face on first use into `$ADAPTIVE_SAMPLING_MODEL_CACHE/hf_hub`.
+- **TabPFN v2.5** checkpoints are downloaded by the `tabpfn` package into `$TABPFN_MODEL_CACHE_DIR` on first use.
+- **Public data.**  California housing and the OpenML datasets (Bike sharing, MAGIC, credit-card default) are downloaded
+  automatically into `$ADAPTIVE_SAMPLING_DATA_CACHE`.
+- **Credentialed data.**  eICU-CRD and MIMIC-IV are available to credentialed users from PhysioNet and are not distributed
+  with this code.
+  - eICU: `$ADAPTIVE_SAMPLING_EICU_DIR/eicu_train_final.csv` and `eicu_test_final.csv` (one row per ICU stay, first-day
+    features and the in-hospital mortality label; used by the Kumo-Tabular and TabPFN eICU tasks), and the GP experiment's
+    fixed split `$ADAPTIVE_SAMPLING_EICU_DIR/0518_data/{train,pool,test}_{x,y}.csv` (10 standardised features; label: the
+    random-forest predicted mortality probability).
+  - MIMIC-IV v3.1: the raw `hosp/` and `icu/` tables in `$ADAPTIVE_SAMPLING_MIMIC_DIR`; build the cohort once with
+    `python -m adaptive_sampling_lib.mimic_cohort`.
 
-2. **Install dependencies:**
+| Variable | What | Default |
+|---|---|---|
+| `ADAPTIVE_SAMPLING_RESULTS` | result JSONs, one folder per experiment | `results/` |
+| `ADAPTIVE_SAMPLING_DATA_CACHE` | downloaded datasets, the built MIMIC-IV cohort | `data_cache/` |
+| `ADAPTIVE_SAMPLING_EICU_DIR` | eICU files | `data/eicu/` |
+| `ADAPTIVE_SAMPLING_MIMIC_DIR` | raw MIMIC-IV v3.1 tables | `data/mimiciv/3.1/` |
+| `ADAPTIVE_SAMPLING_MODEL_CACHE` | Kumo-Tabular weights and package | `model_cache/` |
+| `TABPFN_MODEL_CACHE_DIR` | TabPFN checkpoints | `model_cache/tabpfn/` |
 
-   We use Python 3.10.13 for our experiments.
+Defaults are relative to the repository root and ignored by git.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
-
----
-
-## Creating the Environment
-
-To ensure a consistent and isolated environment, you can create a virtual environment using `venv` or `conda`.
-
-### Using `venv`
+## Running
 
 ```bash
-python -m venv env
-source env/bin/activate  # On Windows use `env\Scripts\activate`
-pip install -r requirements.txt
+python experiments/gp/make_jobs.py --grid paper --out jobs.txt
+python -m adaptive_sampling_lib.launch jobs.txt --gpus 0 1 --per_gpu 4 --log_dir logs
 ```
 
-### Using `conda`
+Each job line ends with `## <output file>`; the launcher skips jobs whose output exists, so an interrupted grid can be
+restarted.  Each run writes `<results>/<experiment>/<tag>/<problem>/<method>_ds<split>_s<seed>.json` with the per-epoch
+posterior variance of the target, its estimate, the true value and the selected batches.  A single run:
 
 ```bash
-conda create -n project_env python=3.10
-conda activate project_env
-pip install -r requirements.txt
+python experiments/gp/run.py --method pathwise --input_dim 10 --seed 1 --seed_dataset 1 --n_steps 1 --tau 0.5
 ```
 
----
+All grids use batches of 5 labels and 10 decision epochs; planners use 10 rollouts per gradient estimate, Adam with
+learning rate 0.1, temperature tau = 0.5 for the pathwise planner, and the top-5 logits as the batch.  Low compute is one
+gradient step per epoch.  Baselines do not plan, so they are run once and reused for every compute budget.
 
-## Running the Project
+## The paper's experiments
 
-1. We currently use weights and biases ([Link](https://wandb.ai/site/)) to track our project and our code is integrated with wandb. See ([Link](https://wandb.ai/site/)) for setting up an account.
-2. Accordingly one might need to edit files for including their own ``ENTITY'' name on wandb.
+### GP (`experiments/gp`)
 
-         For example - In line 288 of "Main/gp_experiments/gp_pipeline_regression/run_pipeline_long_horizon.py" - put your own entity name
-   
-3. After setting up the environment, one can run various pipelines (AUTODIFF, REINFORCE, ACTIVE LEARNING) of the project using following command line (similar commnad line for other pipelines) :
+| Experiment | Command |
+|---|---|
+| Synthetic GP in R^d, d in {1, 5, 10, 20, 50, 100}, 20 function draws, 1/5/10/25/100 gradient steps per epoch | `make_jobs.py --grid paper` |
+| eICU, ten training seeds, 1 and 1000 gradient steps per epoch | `make_jobs.py --grid eicu` |
+| Rollouts per gradient estimate N in {1, 2, 10} (d = 1, 100 steps per epoch) | `make_jobs.py --grid rollouts` |
+| Gradient quality: cosine similarity with the true gradient against N, one function draw per run | `gradient_quality.py --seed_dataset k --gpu 0` |
+
+The synthetic problems have 51 clusters, 100 initial labels from one cluster, a pool of 500 and an evaluation set of 285;
+the belief is a GP with the generating hyperparameters.  The eICU problem is a fixed split with the GP hyperparameters
+fitted in the paper.  `plot_results.py` prints tables and draws the variance and error curves of any grid (e.g.
+`plot_results.py --dataset eicu --tags eicu_low_compute eicu_high_compute`); `analyze_draws.py` compares the posterior
+variance with the realised error across function draws; `smoke_test.py` checks the weighted GP update against the GP
+conditioned on the selected subset.  The gradient-quality figure:
+`python -m adaptive_sampling_lib.plot_gradient_quality --json <results>/gp_high_dim/gradient_quality/*.json --taus 0.1 0.5 10`.
+
+### Kumo-Tabular (`experiments/kumo`)
+
+Four real datasets per task with ten random splits each (k-means selection bias: initial labels from one cluster, the
+evaluation set from a few clusters) and a synthetic task; 1, 10 and 50 gradient steps per epoch.  Regression: eICU
+mortality risk, California housing, Bike sharing, MIMIC-IV ICU length of stay (target: the MSE of a fixed predictor).
+Classification: eICU and MIMIC-IV in-hospital mortality, MAGIC, credit-card default (target: the log-loss of a fixed
+classifier).  In the planner's fractional (weighted) update every context row attends to itself at full weight
+(`--kumo_self_attn full`) and, for regression, the pseudo-updates use the labelled data's preprocessing statistics
+(`--kumo_fixed_stats both`); both leave the update unchanged at binary weights.
+
+| Experiment | Command |
+|---|---|
+| Regression | `make_jobs.py --task regression --grid final` |
+| Classification | `make_jobs.py --task classification --grid final` |
+
+Checks: `check_weighted.py` (the weighted update against the package's forward pass, binary weights, gradients) and
+`check_relaxations.py` in `regression/` and `classification/`.
+
+### TabPFN v2.5 (`experiments/tabpfn`)
+
+The same grids with TabPFN v2.5 as the belief (`make_jobs.py --task regression|classification --grid final`).  The
+Kumo-Tabular runners reuse these runners' problem construction.  `regression/test_tabpfn_module.py` checks the weighted
+update, its gradients and the posterior draws; `regression/gradient_quality.py` is the gradient-quality study with
+TabPFN as the belief.
+
+## Figures and tables of the paper (`paper_figures`)
+
+After running the grids above:
 
 ```bash
-python Main/gp_experiments/gp_pipeline_regression/run_pipeline_long_horizon.py --config_file_path Main/gp_experiments/gp_pipeline_regression/config_sweep_0.json --project_name gp_adaptive_sampling_final_run
+python paper_figures/make_figures.py            # GP in R^d and Kumo-Tabular figures, tables, summary.txt
+python paper_figures/make_gp_extra_figures.py   # GP on eICU, rollouts per estimate, gradient quality
 ```
 
-
-### Citation
-
-```bib
-@inproceedings{
-    mittal2024adaptive,
-    title={Adaptive Labeling for Efficient Out-of-distribution Model Evaluation},
-    author={Daksh Mittal and Yuanzhe Ma and Shalmali Joshi and Hongseok Namkoong},
-    booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems},
-    year={2024},
-    url={https://openreview.net/forum?id=uuQQwrjMzb}
-}
-```
-
-
-
-
-
-
-
+Both read the results root and write to `paper_figures/output/` (or `--out <folder>`).
