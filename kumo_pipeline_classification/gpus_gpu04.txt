@@ -1,7 +1,0 @@
-# researchgpu04 Kumo regression grid: per-GPU cap on running Kumo jobs (cap_by_running), same totals as the classification grid
-2 3
-3 4
-5 4
-6 4
-7 4
-4 3

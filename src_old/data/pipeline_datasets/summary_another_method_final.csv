@@ -1,8 +1,0 @@
-seed,2,data_name,/input_dim_1,seed,2,X_col,['Column0'],random_coeff,[-0.1280102],k,0.05,before_shape,"(500, 2)",after_shape,"(238, 2)"
-seed,2,data_name,/input_dim_1,seed,2,X_col,['Column0'],random_coeff,[-0.1280102],k,0.25,before_shape,"(500, 2)",after_shape,"(236, 2)"
-seed,2,data_name,/input_dim_1,seed,2,X_col,['Column0'],random_coeff,[-0.1280102],k,0.5,before_shape,"(500, 2)",after_shape,"(233, 2)"
-seed,2,data_name,/input_dim_1,seed,2,X_col,['Column0'],random_coeff,[-0.1280102],k,1.0,before_shape,"(500, 2)",after_shape,"(231, 2)"
-seed,2,data_name,/input_dim_1,seed,2,X_col,['Column0'],random_coeff,[-0.1280102],k,2.0,before_shape,"(500, 2)",after_shape,"(228, 2)"
-seed,2,data_name,/input_dim_1,seed,2,X_col,['Column0'],random_coeff,[-0.1280102],k,4.0,before_shape,"(500, 2)",after_shape,"(232, 2)"
-seed,2,data_name,/input_dim_1,seed,2,X_col,['Column0'],random_coeff,[-0.1280102],k,8.0,before_shape,"(500, 2)",after_shape,"(242, 2)"
-seed,2,data_name,/input_dim_1,seed,2,X_col,['Column0'],random_coeff,[-0.1280102],k,16.0,before_shape,"(500, 2)",after_shape,"(250, 2)"

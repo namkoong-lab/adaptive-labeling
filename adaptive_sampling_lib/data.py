@@ -191,10 +191,11 @@ def make_synthetic_logit_problem(seed: int, input_dim: int = 10, n_train: int = 
     return Problem(base.train_x, ys[0], base.pool_x, ys[1], base.eval_x, ys[2], base.train_cluster, base.pool_cluster, base.eval_cluster, meta, eval_p=probs[2])
 
 
-EICU_REG_DIR = "/shared/share_mala/data/eicu_train_test/0518_data/"
-EICU_RAW_TRAIN = "/shared/share_mala/data/eicu_train_test/eicu_train_final.csv"
-EICU_RAW_TEST = "/shared/share_mala/data/eicu_train_test/eicu_test_final.csv"
-DATA_CACHE = "/shared/share_mala/daksh/adaptive_sampling_experiments/data_cache"
+from adaptive_sampling_lib.paths import DATA_CACHE, EICU_DIR  # noqa: E402
+
+EICU_REG_DIR = os.path.join(EICU_DIR, "0518_data") + os.sep
+EICU_RAW_TRAIN = os.path.join(EICU_DIR, "eicu_train_final.csv")
+EICU_RAW_TEST = os.path.join(EICU_DIR, "eicu_test_final.csv")
 
 
 def _read_xy(csv_dir, name):
@@ -389,7 +390,7 @@ def make_openml_problem(data_id: int, task: str, seed: int, log_target: bool = F
 # --------------------------------------------------------------------------------------
 # MIMIC-IV (first-24h ICU cohort built by adaptive_sampling_lib.mimic_cohort)
 # --------------------------------------------------------------------------------------
-MIMIC_COHORT_CSV = "/shared/share_mala/daksh/adaptive_sampling_experiments/data_cache/mimic_icu_first24h.csv"
+MIMIC_COHORT_CSV = os.path.join(DATA_CACHE, "mimic_icu_first24h.csv")
 
 
 def load_mimic_arrays(task: str = "classification", csv: str = MIMIC_COHORT_CSV, min_feature_coverage: float = 0.7,

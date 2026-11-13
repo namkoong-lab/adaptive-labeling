@@ -22,7 +22,7 @@ from adaptive_sampling_lib.predictor import predictor_outputs, train_predictor  
 from adaptive_sampling_lib.targets import MSETarget  # noqa: E402
 from adaptive_sampling_lib.utils import pick_device, seed_all  # noqa: E402
 
-R = "/shared/share_mala/daksh/adaptive_sampling_experiments/results"
+from adaptive_sampling_lib.paths import RESULTS_ROOT as R  # noqa: E402
 
 
 def group_key(rec):

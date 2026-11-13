@@ -1,5 +1,5 @@
 """The fixed predictor psi whose population performance is being estimated (an MLP trained on
-the biased initial labelled set; port of gp_pipeline_regression/predictor_network.py)."""
+the biased initial labelled set; port of the original GP pipeline's predictor_network.py)."""
 from __future__ import annotations
 
 import torch

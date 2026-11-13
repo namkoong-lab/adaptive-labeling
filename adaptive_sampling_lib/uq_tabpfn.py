@@ -30,7 +30,9 @@ import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
 
-os.environ.setdefault("TABPFN_MODEL_CACHE_DIR", "/shared/share_mala/daksh/adaptive_sampling_experiments/tabpfn_models")
+from adaptive_sampling_lib.paths import TABPFN_MODELS  # noqa: E402
+
+os.environ.setdefault("TABPFN_MODEL_CACHE_DIR", TABPFN_MODELS)
 
 from tabpfn.architectures import tabpfn_v2_5 as v25  # noqa: E402
 from tabpfn.architectures.interface import PerformanceOptions  # noqa: E402

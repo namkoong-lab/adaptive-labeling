@@ -21,8 +21,10 @@ import time
 import numpy as np
 import pandas as pd
 
-ROOT = "/shared/share_mala/daksh/mimiciv/physionet.org/files/mimiciv/3.1"
-OUT_DEFAULT = "/shared/share_mala/daksh/adaptive_sampling_experiments/data_cache/mimic_icu_first24h.csv"
+from adaptive_sampling_lib.paths import DATA_CACHE, MIMIC_DIR  # noqa: E402
+
+ROOT = MIMIC_DIR
+OUT_DEFAULT = os.path.join(DATA_CACHE, "mimic_icu_first24h.csv")
 
 ITEMS = {
     220045: "hr",

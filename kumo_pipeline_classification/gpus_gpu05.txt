@@ -1,2 +1,0 @@
-# researchgpu05 Kumo regression grid: only GPU 1 (as agreed for the classification grid)
-1 4

@@ -42,7 +42,8 @@ itself with weight a in the ICL layers' context-to-context attention, so at smal
 entirely from other rows; evaluation points near it still attend to it strongly, and the update saturates: on California a
 pool item at weight 0.01 moved the estimate of Q more than the same item at weight 1, the relaxed objective was 60-70 % drift,
 and the pathwise planner, optimised for more steps, parked weight on inert training-cluster items whose top-b rounding had
-almost no gain (report_oct2026/diag_kumo_mechanism.py, diag_weight_curve.py, diag_kumo_fix.py).  With 'full' every row
+almost no gain (the weight-curve diagnostics are kept with the reports, outside the repository; the test of the
+relaxations against each other is experiments/kumo/regression/stage1.py).  With 'full' every row
 attends to itself at full weight while counting with weight a for the other rows; the single-item curve then rises smoothly
 from 0 to its hard value, as with TabPFN, and binary weights reproduce the hard update as before.
 
@@ -71,9 +72,11 @@ import os
 import socket
 import sys
 
-os.environ.setdefault("HF_HUB_CACHE", "/shared/share_mala/daksh/model_cache/hf_hub")
+from adaptive_sampling_lib.paths import MODEL_CACHE  # noqa: E402
+
+os.environ.setdefault("HF_HUB_CACHE", os.path.join(MODEL_CACHE, "hf_hub"))
 os.environ.setdefault("TRITON_CACHE_DIR", f"/tmp/triton_cache_{os.environ.get('USER', 'user')}_{socket.gethostname()}")
-SDM_PATH = os.environ.get("SDM_PATH", "/shared/share_mala/daksh/model_cache/sdm_pkgs")
+SDM_PATH = os.environ.get("SDM_PATH", os.path.join(MODEL_CACHE, "sdm_pkgs"))
 if SDM_PATH not in sys.path:
     sys.path.insert(0, SDM_PATH)
 

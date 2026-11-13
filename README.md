@@ -1,140 +1,130 @@
-# **Adaptive Labeling for Efficient Out-of-Distribution Model Evaluation**
+# Adaptive Measurement via Posterior Variance Minimization — experiments
 
-## Introduction
+Code for the experiments of the revised paper *Adaptive Measurement via Posterior Variance Minimization*: a planner chooses
+which points to label so that the posterior variance of a target quantity (here the error of a fixed predictor on a
+shifted population) falls as fast as possible.  The planners are a pathwise (autodiff) policy gradient and REINFORCE with
+and without a baseline; the baselines are random and uncertainty sampling.  The belief over the labels is a Gaussian
+process, an `Ensemble+` network ensemble, or a tabular foundation model (TabPFN v2.5, Kumo-Tabular).
 
-Supervised data suffers severe selection bias when labels are expensive. We formulate a MDP over posterior beliefs on model performance and solve it with pathwise policy gradients computed through an auto-differentiable pipeline. The paper is available [here](https://openreview.net/pdf?id=uuQQwrjMzb).
+This branch (`revision-oct2026`) is the internal superset: every experiment of the revision, including those not in the
+paper (Ensemble+, TabPFN).  Results, reports and the experiment log are kept outside git.
 
-**Key Features:**
-- Adaptive Labeling - MDPs with combinatorial action space
-- Uncertainty Quantification - Gaussian Processes, Deep Learning based UQ methodologies (Ensembles, Ensemble+, ENNs)
-- Policy parametrization through K-subset sampling
-- Policy gradients through Autodiff - Smoothed differentiable pipeline 
+## Layout
 
----
-
-## Table of Contents
-
-1. [Project Structure](#project-structure)
-2. [Installation](#installation)
-3. [Creating the Environment](#creating-the-environment)
-4. [Running the Project](#running-the-project)
-
----
-
-## Project Structure
-
-```plaintext
-Project_Name/
-│
-├── Main/                    # Source code for the project
-│   ├── gp_experiments
-│   │    ├── gp_pipeline_regression
-│   │    │     ├── run_pipeline_long_horizon.py
-│   │    │     ├── run_pipeline_pg_long_horizon.py
-│   │    │     ├── run_pipeline_active_learning_long_horizon.py
-│   │    │     └── .... 
-│   │    │       
-│   │    └── gp_pipeline_regression_real_data
-│   │          ├── run_pipeline_long_horizon.py
-│   │          ├── run_pipeline_pg_long_horizon.py
-│   │          ├── run_pipeline_active_learning_long_horizon.py
-│   │          └── .... 
-│   └── ensemble_plus_experiments
-│          ├── ensemble_plus_pipeline_regression
-│          │       ├── run_enn_pipeline_1a.py
-│          │       ├── run_pipeline_pg_ensemble_plus_long_horizon.py
-│          │       └── ....
-│          └── ensemble_plus_pipeline_regression_active_learning
-│                  ├── run_enn_pipeline_1a_active_learning.py
-│                  └── ....
-│    
-│
-├── src/                   # Source code for ongoing research (under development)
-│   ├── autodiff           # Autodiff (Smoothed-Differentiable) pipeline development - different UQ methodologies, integration with baselines
-│   │     ├── gp
-│   │     ├── ensemble_plus
-│   │     ├── enn
-│   │     └── deprecated    # Deprecated code
-│   ├── baselines          # REINFORCE based policy gradient pipeline development
-│   └──  notebooks          # Notebooks for unit tests, testing individual components of the pipeline
-│
-├── requirements.txt        # List of dependencies
-└──  README.md               # Project documentation
+```
+adaptive_sampling_lib/       shared library
+  planners.py                pathwise and REINFORCE planners, uncertainty baselines
+  runner.py                  the multi-epoch acquisition loop; writes one JSON per run
+  uq_gp.py uq_ensemble.py uq_tabpfn.py uq_kumo.py    beliefs, each with a differentiable weighted-context update
+  data.py targets.py predictor.py subset.py          problems, targets, the evaluated predictor, soft top-k
+  launch.py                  runs a job list on several GPUs
+  paths.py                   where results, data and model weights live (environment variables)
+experiments/
+  gp/                        GP regression in R^d (d = 1 ... 100)
+  ensemble_plus/             Ensemble+ regression, multi-step
+  tabpfn/                    TabPFN v2.5 as the belief: regression/ and classification/
+  kumo/                      Kumo-Tabular medium as the belief: regression/ and classification/
 ```
 
----
+Each experiment folder has a `run.py` (one run), a `make_jobs.py` (a job list; `--grid` gives the grids we ran) and its
+checks and analysis scripts.
 
-## Installation
+## Setup
 
-1. **Clone the repository:**
+Python 3.12 and a CUDA GPU.  Install the packages in `requirements.txt` (the versions the runs used).
 
-   ```bash
-   git clone https://github.com/namkoong-lab/adaptive-labeling.git
-   cd adaptive-labeling
-   ```
+- **Kumo-Tabular** needs NVIDIA's `structured-data-models` 0.2.1 (wheel from
+  <https://github.com/NVIDIA/structured-data-models/releases>), installed into `$ADAPTIVE_SAMPLING_MODEL_CACHE/sdm_pkgs`
+  (`pip install --target ... structured_data_models-0.2.1-py3-none-any.whl`) or into the environment.  Its weights are
+  downloaded from Hugging Face on first use into `$ADAPTIVE_SAMPLING_MODEL_CACHE/hf_hub`.
+- **TabPFN v2.5** checkpoints are downloaded by the `tabpfn` package into `$TABPFN_MODEL_CACHE_DIR` on first use.
+- **Data.**  California housing and the OpenML datasets (Bike sharing, MAGIC, credit-card default) are downloaded
+  automatically into `$ADAPTIVE_SAMPLING_DATA_CACHE`.  eICU and MIMIC-IV are credentialed (PhysioNet) and must be obtained
+  separately; the MIMIC-IV cohort is built once with `python -m adaptive_sampling_lib.mimic_cohort`.
 
-2. **Install dependencies:**
+| Variable | What | Default |
+|---|---|---|
+| `ADAPTIVE_SAMPLING_RESULTS` | result JSONs, one folder per experiment | lab shared storage |
+| `ADAPTIVE_SAMPLING_DATA_CACHE` | downloaded datasets, built MIMIC-IV cohort | lab shared storage |
+| `ADAPTIVE_SAMPLING_EICU_DIR` | eICU files | lab shared storage |
+| `ADAPTIVE_SAMPLING_MIMIC_DIR` | raw MIMIC-IV v3.1 tables | lab shared storage |
+| `ADAPTIVE_SAMPLING_MODEL_CACHE` | Kumo-Tabular weights and package | lab shared storage |
+| `TABPFN_MODEL_CACHE_DIR` | TabPFN checkpoints | lab shared storage |
 
-   We use Python 3.10.13 for our experiments.
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
----
-
-## Creating the Environment
-
-To ensure a consistent and isolated environment, you can create a virtual environment using `venv` or `conda`.
-
-### Using `venv`
+## Running
 
 ```bash
-python -m venv env
-source env/bin/activate  # On Windows use `env\Scripts\activate`
-pip install -r requirements.txt
+python experiments/kumo/make_jobs.py --task regression --grid final --out jobs.txt
+python -m adaptive_sampling_lib.launch jobs.txt --gpus 0 1 --per_gpu 3 --log_dir logs
 ```
 
-### Using `conda`
+Each job line ends with `## <output file>`; the launcher skips jobs whose output exists, so an interrupted grid can be
+restarted.  Each run writes `<results>/<experiment>/<tag>/.../<method>_ds<split>_s<seed>.json` with the per-epoch posterior
+variance of the target, its estimate, the true value and the selected batches.  A single run:
 
 ```bash
-conda create -n project_env python=3.10
-conda activate project_env
-pip install -r requirements.txt
+python experiments/gp/run.py --method pathwise --input_dim 10 --seed 1 --seed_dataset 1 --n_steps 1 --tau 0.5
 ```
 
----
+All grids use batches of 5 labels; planners use 10 rollouts per gradient estimate, Adam with learning rate 0.1 and the
+top-5 logits as the batch.  Baselines do not plan, so they are run once and reused for every compute budget.
 
-## Running the Project
+## Experiments and their grids
 
-1. We currently use weights and biases ([Link](https://wandb.ai/site/)) to track our project and our code is integrated with wandb. See ([Link](https://wandb.ai/site/)) for setting up an account.
-2. Accordingly one might need to edit files for including their own ``ENTITY'' name on wandb.
+### GP (`experiments/gp`)
+Synthetic GP functions on a 51-cluster layout in R^d; 100 initial labels from one cluster, a pool of 500, an evaluation set
+of 285, 10 epochs.
 
-         For example - In line 288 of "Main/gp_experiments/gp_pipeline_regression/run_pipeline_long_horizon.py" - put your own entity name
-   
-3. After setting up the environment, one can run various pipelines (AUTODIFF, REINFORCE, ACTIVE LEARNING) of the project using following command line (similar commnad line for other pipelines) :
+| Grid | Command |
+|---|---|
+| Paper: d in {1, 5, 10, 20, 50, 100}, 20 function draws, budgets 1/5/10/25/100 steps, pathwise at tau = 0.5 | `make_jobs.py --grid paper` |
+| Pathwise at the default tau = 0.1 | `make_jobs.py --methods pathwise --regimes low mid5 mid10 mid25 high` |
+| Pathwise at tau = 1.0 | `make_jobs.py --methods pathwise --regimes low mid5 mid10 mid25 high --tag_prefix draws_tau10 --extra "--tau 1.0"` |
+| One function draw, training seeds 0-9 | `make_jobs.py --seeds 0-9 --regimes low high` |
 
-```bash
-python Main/gp_experiments/gp_pipeline_regression/run_pipeline_long_horizon.py --config_file_path Main/gp_experiments/gp_pipeline_regression/config_sweep_0.json --project_name gp_adaptive_sampling_final_run
-```
+`analyze_draws.py` and `plot_results.py` summarise the runs; `smoke_test.py` checks the weighted GP update against the
+subset GP and that the planners and baselines run.
 
+### Ensemble+ (`experiments/ensemble_plus`)
+Ten smooth (SiLU, heavy-ball) members anchored to their initialisation; synthetic GP functions in R^5, 20 initial labels,
+5 epochs, 1 and 50 gradient steps per epoch.
 
-### Citation
+| Grid | Command |
+|---|---|
+| v5: 21 clusters, pool 200 (reported) | `make_jobs.py --grid v5` |
+| v4: 11 clusters, pool 100 | `make_jobs.py --grid v4` |
 
-```bib
-@inproceedings{
-    mittal2024adaptive,
-    title={Adaptive Labeling for Efficient Out-of-distribution Model Evaluation},
-    author={Daksh Mittal and Yuanzhe Ma and Shalmali Joshi and Hongseok Namkoong},
-    booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems},
-    year={2024},
-    url={https://openreview.net/forum?id=uuQQwrjMzb}
-}
-```
+`smoke_test.py` checks the ensemble and the planners on it; `benchmark_pathwise_speed.py` times one pathwise gradient
+estimate against the original per-member implementation.
 
+### TabPFN v2.5 (`experiments/tabpfn`)
+Regression: eICU, California housing, Bike sharing, MIMIC-IV ICU length of stay and a synthetic GP layout in R^10
+(target: the MSE of a fixed predictor).  Classification: eICU mortality, MAGIC, credit-card default, MIMIC-IV mortality
+and a synthetic task (target: the log-loss of a fixed classifier).  Ten splits each, skewed pool and evaluation set,
+1/10/50 gradient steps per epoch, tau = 0.5, float32.
 
+| Grid | Command |
+|---|---|
+| Regression, range-conditioned moments (reported) | `make_jobs.py --task regression --grid final` |
+| Classification (reported) | `make_jobs.py --task classification --grid final` |
+| Regression, full moments, squashed inputs | `make_jobs.py --task regression --tag_prefix final_full --extra "--input_transform squash3 --fp32 --tau 0.5"` |
 
+Checks and studies in `regression/`: `test_tabpfn_module.py` (weighted update, its gradients, posterior draws), `gradient_quality.py` and
+`plot_gradient_quality.py` (gradient estimators against a reference), `noise_decomposition.py`, `analyze_splits.py`.
 
+### Kumo-Tabular (`experiments/kumo`)
+The TabPFN grids with Kumo-Tabular medium as the belief.  The fractional update keeps each context row's attention to
+itself at full weight (`--kumo_self_attn full`) and, for regression, gives the pseudo-updates the labelled data's
+preprocessing statistics (`--kumo_fixed_stats both`); both leave the ordinary update unchanged at binary weights.
 
+| Grid | Command |
+|---|---|
+| Regression (reported) | `make_jobs.py --task regression --grid final` |
+| Classification (reported) | `make_jobs.py --task classification --grid final` |
+| Regression, original fractional update | `make_jobs.py --task regression --tag_prefix final_kumo_fix --extra "--moments range --tau 0.5 --kumo_fixed_stats both"` |
+| Classification, original fractional update | `make_jobs.py --task classification --tag_prefix final_kumo_cls --extra "--tau 0.5"` |
+| Average-row-embedding relaxation (pathwise only) | `make_jobs.py --task regression --methods pathwise --tag_prefix final_kumo_ae --extra "--moments range --tau 0.5 --kumo_fixed_stats both --kumo_relax avg_emb"` |
 
-
+Checks in `regression/` and `classification/`: `check_weighted.py` (the weighted update against the package's forward
+pass, binary weights, gradients) and `check_relaxations.py`; `stage1.py` compares relaxations and objectives at the first
+epoch, and `agreement.py` compares variance criteria on candidate batches.

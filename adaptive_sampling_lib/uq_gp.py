@@ -1,5 +1,5 @@
 """Gaussian-process UQ module with the weighted posterior update of Algorithm 2
-(port of gp_pipeline_regression/custom_gp_cholesky.py: off-diagonal entries of K scaled by
+(port of the original GP pipeline's custom_gp_cholesky.py: off-diagonal entries of K scaled by
 w_i w_j, rows of K_* scaled by w_i; binary weights give the ordinary GP posterior on the
 selected observations).  Everything is done in float64 on the chosen device.
 """
