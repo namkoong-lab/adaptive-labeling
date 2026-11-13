@@ -1,0 +1,33 @@
+\begin{tabular}{cclccc}
+\toprule
+ & & Dataset & R & Rb & PW \\
+\midrule
+\multirow{10}{*}{\rotatebox[origin=c]{90}{\shortstack{\textbf{Regression}\\(MSE)}}} & \multirow{5}{*}{\rotatebox[origin=c]{90}{\shortstack{\emph{Final}\\\emph{variance}}}} & eICU & 0.34 & 0.34 & \textbf{0.29} \\
+ &  & California & 0.29 & 0.30 & \textbf{0.26} \\
+ &  & Bike & 0.28 & 0.25 & \textbf{0.17} \\
+ &  & MIMIC-IV & 0.49 & 0.46 & \textbf{0.41} \\
+\addlinespace[2pt]
+ &  & Pooled & 0.34 & 0.33 & \textbf{0.27} \\
+\cmidrule(l){2-6}
+ & \multirow{5}{*}{\rotatebox[origin=c]{90}{\shortstack{\emph{Final}\\\emph{RMSE}}}} & eICU & 0.23 & 0.20 & \textbf{0.12} \\
+ &  & California & \textbf{0.40} & 0.58 & 0.45 \\
+ &  & Bike & 0.39 & 0.44 & \textbf{0.22} \\
+ &  & MIMIC-IV & \textbf{0.54} & 0.60 & 0.59 \\
+\addlinespace[2pt]
+ &  & Pooled & 0.37 & 0.42 & \textbf{0.29} \\
+\midrule
+\multirow{10}{*}{\rotatebox[origin=c]{90}{\shortstack{\textbf{Classification}\\(log-loss)}}} & \multirow{5}{*}{\rotatebox[origin=c]{90}{\shortstack{\emph{Final}\\\emph{variance}}}} & eICU & 0.40 & 0.49 & \textbf{0.29} \\
+ &  & MAGIC & 0.34 & 0.38 & \textbf{0.28} \\
+ &  & Credit & 0.55 & 0.64 & \textbf{0.50} \\
+ &  & MIMIC-IV & 0.59 & 0.53 & \textbf{0.41} \\
+\addlinespace[2pt]
+ &  & Pooled & 0.46 & 0.50 & \textbf{0.36} \\
+\cmidrule(l){2-6}
+ & \multirow{5}{*}{\rotatebox[origin=c]{90}{\shortstack{\emph{Final}\\\emph{RMSE}}}} & eICU & 1.05 & 1.57 & \textbf{0.58} \\
+ &  & MAGIC & 0.38 & 0.42 & \textbf{0.18} \\
+ &  & Credit & 0.72 & 1.03 & \textbf{0.53} \\
+ &  & MIMIC-IV & 0.85 & 0.91 & \textbf{0.48} \\
+\addlinespace[2pt]
+ &  & Pooled & 0.70 & 0.89 & \textbf{0.41} \\
+\bottomrule
+\end{tabular}

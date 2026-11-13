@@ -24,6 +24,7 @@ experiments/
   kumo/                      Kumo-Tabular as the belief: regression/ and classification/
   tabpfn/                    TabPFN v2.5 as the belief: regression/ and classification/ (the Kumo runners build on these)
 paper_figures/               the paper's experiment figures and tables from the result JSONs
+paper_results/               those figures and tables, and the per-run results behind them (see its README)
 ```
 
 Each experiment folder has a `run.py` (one run), a `make_jobs.py` (a job list; `--grid` gives the paper's grids) and its
@@ -133,3 +134,11 @@ python paper_figures/make_gp_extra_figures.py   # GP on eICU, rollouts per estim
 ```
 
 Both read the results root and write to `paper_figures/output/` (or `--out <folder>`).
+
+The figures, tables and one compact JSON per run of these grids are already in `paper_results/`; to redraw them from
+those runs without rerunning anything:
+
+```bash
+ADAPTIVE_SAMPLING_RESULTS=paper_results/runs python paper_figures/make_figures.py --out paper_results
+ADAPTIVE_SAMPLING_RESULTS=paper_results/runs python paper_figures/make_gp_extra_figures.py --out paper_results
+```
