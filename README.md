@@ -98,7 +98,7 @@ mean baseline, pathwise at several tau) and the true gradient of the planners' o
 gradient is REINFORCE over 10^6 rollouts with the closed-form posterior variance of the target.  `--setup polyadic`
 reproduces the first version of this study (its synthetic problem, a constant-zero predictor and the true pool labels in
 the rollouts; needs gpytorch); `--predictor` and `--labels` change one factor at a time.  Plot one or several draws
-with `python -m adaptive_sampling_lib.plot_gradient_quality --json <files> --taus 0.1 0.5 10`.
+with `python -m adaptive_sampling_lib.plot_gradient_quality --json <files> --taus 0.1 0.5 1`.
 
 ### Ensemble+ (`experiments/ensemble_plus`)
 Ten smooth (SiLU, heavy-ball) members anchored to their initialisation; synthetic GP functions in R^5, 20 initial labels,

@@ -11,7 +11,7 @@
 
 Arrows in the variance panels mark label savings of the pathwise planner, as in make_figures.py.
 
-  python paper_figures/make_gp_extra_figures.py [--out <folder>] [--taus 0.1 0.5 10]
+  python paper_figures/make_gp_extra_figures.py [--out <folder>] [--taus 0.1 0.5 1]
 """
 import argparse
 import glob
@@ -166,7 +166,7 @@ def fig_cosine(taus, files):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--out", default=mrf.OUT)
-    p.add_argument("--taus", type=float, nargs=3, default=[0.1, 0.5, 10.0], help="the three pathwise temperatures of the cosine figure")
+    p.add_argument("--taus", type=float, nargs=3, default=[0.1, 0.5, 1.0], help="the three pathwise temperatures of the cosine figure")
     p.add_argument("--gradient_files", nargs="+", default=None,
                    help="gradient-quality JSONs (default: every synthetic d = 1 draw under <results>/gp_high_dim/gradient_quality)")
     a = p.parse_args()

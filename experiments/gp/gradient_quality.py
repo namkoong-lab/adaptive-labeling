@@ -63,7 +63,7 @@ def main():
     p.add_argument("--b", type=int, default=5)
     p.add_argument("--n_mc", type=int, default=100, help="posterior draws per rollout (as the planners)")
     p.add_argument("--Ns", type=int, nargs="+", default=[1, 2, 4, 8, 10, 100, 1000])
-    p.add_argument("--taus", type=float, nargs="+", default=[0.1, 0.5, 10.0])
+    p.add_argument("--taus", type=float, nargs="+", default=[0.1, 0.5, 1.0])
     p.add_argument("--reps", type=int, default=200, help="estimates per N")
     p.add_argument("--bank", type=int, default=20000, help="independent rollouts per estimator (>= max N)")
     p.add_argument("--n_ref", type=int, default=1000000, help="rollouts of the reference gradient")
