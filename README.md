@@ -96,7 +96,7 @@ fitted in the paper.  `plot_results.py` prints tables and draws the variance and
 `plot_results.py --dataset eicu --tags eicu_low_compute eicu_high_compute`); `analyze_draws.py` compares the posterior
 variance with the realised error across function draws; `smoke_test.py` checks the weighted GP update against the GP
 conditioned on the selected subset.  The gradient-quality figure:
-`python -m adaptive_sampling_lib.plot_gradient_quality --json <results>/gp_high_dim/gradient_quality/*.json --taus 0.1 0.5 10`.
+`python -m adaptive_sampling_lib.plot_gradient_quality --json <results>/gp_high_dim/gradient_quality/*.json --taus 0.1 0.5 1`.
 
 ### Kumo-Tabular (`experiments/kumo`)
 
