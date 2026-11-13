@@ -18,9 +18,10 @@ adaptive_sampling_lib/       shared library
   uq_gp.py uq_ensemble.py uq_tabpfn.py uq_kumo.py    beliefs, each with a differentiable weighted-context update
   data.py targets.py predictor.py subset.py          problems, targets, the evaluated predictor, soft top-k
   launch.py                  runs a job list on several GPUs
+  aggregate.py plot_gradient_quality.py              curves, tables and figures from the result JSONs
   paths.py                   where results, data and model weights live (environment variables)
 experiments/
-  gp/                        GP regression in R^d (d = 1 ... 100)
+  gp/                        GP regression: synthetic in R^d (d = 1 ... 100) and eICU
   ensemble_plus/             Ensemble+ regression, multi-step
   tabpfn/                    TabPFN v2.5 as the belief: regression/ and classification/
   kumo/                      Kumo-Tabular medium as the belief: regression/ and classification/
@@ -73,17 +74,28 @@ top-5 logits as the batch.  Baselines do not plan, so they are run once and reus
 
 ### GP (`experiments/gp`)
 Synthetic GP functions on a 51-cluster layout in R^d; 100 initial labels from one cluster, a pool of 500, an evaluation set
-of 285, 10 epochs.
+of 285, 10 epochs; the belief is a GP with the generating hyperparameters.  `--dataset eicu` runs the paper's eICU split
+(label: the random-forest mortality probability) with the GP hyperparameters fitted in the paper.
 
 | Grid | Command |
 |---|---|
 | Paper: d in {1, 5, 10, 20, 50, 100}, 20 function draws, budgets 1/5/10/25/100 steps, pathwise at tau = 0.5 | `make_jobs.py --grid paper` |
+| eICU: ten training seeds, all methods at 1 and 1000 steps per epoch, tau = 0.5 | `make_jobs.py --grid eicu` |
+| Rollouts per gradient estimate N in {1, 2, 10}: d = 1, 100 steps per epoch, 20 function draws, tau = 0.5 | `make_jobs.py --grid rollouts` |
 | Pathwise at the default tau = 0.1 | `make_jobs.py --methods pathwise --regimes low mid5 mid10 mid25 high` |
 | Pathwise at tau = 1.0 | `make_jobs.py --methods pathwise --regimes low mid5 mid10 mid25 high --tag_prefix draws_tau10 --extra "--tau 1.0"` |
 | One function draw, training seeds 0-9 | `make_jobs.py --seeds 0-9 --regimes low high` |
 
-`analyze_draws.py` and `plot_results.py` summarise the runs; `smoke_test.py` checks the weighted GP update against the
-subset GP and that the planners and baselines run.
+`plot_results.py` prints tables and draws the variance and error curves of any of these grids (e.g.
+`plot_results.py --dataset eicu --tags eicu_low_compute eicu_high_compute`); `analyze_draws.py` compares the posterior
+variance with the realised error across function draws; `smoke_test.py` checks the weighted GP update against the subset
+GP and that the planners and baselines run.
+
+Gradient quality (`gradient_quality.py`, one function draw per run, `--seed_dataset k`): at the initial belief and
+uniform logits, the expected cosine similarity between each estimator's N-rollout gradient (REINFORCE, REINFORCE with a
+mean baseline, pathwise at several tau) and the true gradient of the planners' objective, for N = 1 ... 1000.  The true
+gradient is REINFORCE over 10^6 rollouts with the closed-form posterior variance of the target.  Plot one or several draws
+with `python -m adaptive_sampling_lib.plot_gradient_quality --json <files> --taus 0.1 0.5 10`.
 
 ### Ensemble+ (`experiments/ensemble_plus`)
 Ten smooth (SiLU, heavy-ball) members anchored to their initialisation; synthetic GP functions in R^5, 20 initial labels,
@@ -109,8 +121,9 @@ and a synthetic task (target: the log-loss of a fixed classifier).  Ten splits e
 | Classification (reported) | `make_jobs.py --task classification --grid final` |
 | Regression, full moments, squashed inputs | `make_jobs.py --task regression --tag_prefix final_full --extra "--input_transform squash3 --fp32 --tau 0.5"` |
 
-Checks and studies in `regression/`: `test_tabpfn_module.py` (weighted update, its gradients, posterior draws), `gradient_quality.py` and
-`plot_gradient_quality.py` (gradient estimators against a reference), `noise_decomposition.py`, `analyze_splits.py`.
+Checks and studies in `regression/`: `test_tabpfn_module.py` (weighted update, its gradients, posterior draws),
+`gradient_quality.py` (gradient estimators against a reference; plot with `python -m adaptive_sampling_lib.plot_gradient_quality`),
+`noise_decomposition.py`, `analyze_splits.py`.
 
 ### Kumo-Tabular (`experiments/kumo`)
 The TabPFN grids with Kumo-Tabular medium as the belief.  The fractional update keeps each context row's attention to

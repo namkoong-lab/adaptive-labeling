@@ -14,4 +14,6 @@ uq_kumo     : Kumo-Tabular uncertainty module with weighted context (attention b
 planners    : pathwise / REINFORCE one-step planners and active-learning baselines
 predictor   : predictor networks (the model whose performance is being estimated)
 runner      : multi-horizon acquisition loop with JSON logging
+aggregate   : per-method curves and tables from the result JSONs
+plot_gradient_quality : figure of a gradient-quality study (python -m adaptive_sampling_lib.plot_gradient_quality)
 """
