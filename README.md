@@ -95,7 +95,9 @@ GP and that the planners and baselines run.
 Gradient quality (`gradient_quality.py`, one function draw per run, `--seed_dataset k`): at the initial belief and
 uniform logits, the expected cosine similarity between each estimator's N-rollout gradient (REINFORCE, REINFORCE with a
 mean baseline, pathwise at several tau) and the true gradient of the planners' objective, for N = 1 ... 1000.  The true
-gradient is REINFORCE over 10^6 rollouts with the closed-form posterior variance of the target.  Plot one or several draws
+gradient is REINFORCE over 10^6 rollouts with the closed-form posterior variance of the target.  `--setup polyadic`
+reproduces the first version of this study (its synthetic problem, a constant-zero predictor and the true pool labels in
+the rollouts; needs gpytorch); `--predictor` and `--labels` change one factor at a time.  Plot one or several draws
 with `python -m adaptive_sampling_lib.plot_gradient_quality --json <files> --taus 0.1 0.5 10`.
 
 ### Ensemble+ (`experiments/ensemble_plus`)

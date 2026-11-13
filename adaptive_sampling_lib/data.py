@@ -191,6 +191,74 @@ def make_synthetic_logit_problem(seed: int, input_dim: int = 10, n_train: int = 
     return Problem(base.train_x, ys[0], base.pool_x, ys[1], base.eval_x, ys[2], base.train_cluster, base.pool_cluster, base.eval_cluster, meta, eval_p=probs[2])
 
 
+def make_polyadic_gp_problem(seed: int = 0, n_train: int = 100, n_pool: int = 500, n_eval: int = 285, n_anchor: int = 51,
+                             input_dim: int = 1, stdev_scale: float = 0.5, stdev_pool_scale: float = 0.5,
+                             scaling_factor: float = 1.0, lengthscale: float = 1.0, outputscale: float = 0.69,
+                             noise_std: float = 0.1) -> Problem:
+    """The synthetic GP problem of the paper's first version (its polyadic sampler, 'if_logits' layout), reproduced bitwise:
+    the same random-number sequence (seed, a 10-point dummy draw, then the inputs) in float64 and the same gpytorch calls
+    (gpytorch is needed only here).  Layout: anchors at distances 0, 1, ..., n_anchor-1 (times sqrt(d)) along random
+    directions; the initial labels from anchor 0; half of the pool from anchor 0 and the other half spread evenly over the
+    rest; the evaluation set n_train/10 points at each of anchors 0 .. (n_anchor-1)/2 and one point at each remaining anchor.
+
+    The labels are NOT draws from the GP prior with the given hyperparameters.  The original code called the model in
+    gpytorch's eval mode after setting its training data to these same inputs with zero targets, which returns the
+    posterior given y = 0 at every input; for more than 800 points gpytorch also samples it through an approximate
+    low-rank root.  The labels are therefore close to zero (std about 0.03-0.08 for seed 0, against about 0.65 for a prior
+    draw).  make_synthetic_gp_problem draws from the prior.  Used by experiments/gp/gradient_quality.py --setup polyadic."""
+    import gpytorch
+
+    prev = torch.get_default_dtype()
+    torch.set_default_dtype(torch.float64)  # the original run set this before generating its data
+    try:
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        mean_module, kernel = gpytorch.means.ConstantMean(), gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
+        likelihood = gpytorch.likelihoods.GaussianLikelihood()
+        mean_module.constant = torch.tensor([0.0])
+        kernel.base_kernel.lengthscale = lengthscale
+        kernel.outputscale = outputscale
+        likelihood.noise_covar.noise = noise_std ** 2
+
+        class _GP(gpytorch.models.ExactGP):
+            def __init__(self, x, y):
+                super().__init__(x, y, likelihood)
+                self.mean_module, self.covar_module = mean_module, kernel
+
+            def forward(self, x):
+                return gpytorch.distributions.MultivariateNormal(self.mean_module(x), self.covar_module(x))
+
+        model = _GP(torch.randn(10, input_dim), torch.zeros(10))  # the original's dummy training data (consumes the RNG)
+        # inputs (x_sampler, if_logits branch)
+        anchor = torch.randn(n_anchor, input_dim)
+        anchor = anchor / torch.sqrt((anchor ** 2).sum(1, keepdim=True)) * (math.sqrt(input_dim) * torch.arange(n_anchor)).unsqueeze(1)
+        train_idx = torch.randint(0, 1, (n_train,))
+        pool_idx = torch.randint(0, 1, (int(n_pool / 2),))
+        for i in range(1, n_anchor):
+            pool_idx = torch.cat([pool_idx, torch.randint(i, i + 1, (int(n_pool / (2 * (n_anchor - 1))),))])
+        eval_idx = torch.randint(0, 1, (int(n_train / 10),))
+        for i in range(1, 1 + int((n_anchor - 1) / 2)):
+            eval_idx = torch.cat([eval_idx, torch.randint(i, i + 1, (int(n_train / 10),))])
+        for i in range(1 + int((n_anchor - 1) / 2), n_anchor):
+            eval_idx = torch.cat([eval_idx, torch.randint(i, i + 1, (1,))])
+        assert eval_idx.numel() == n_eval and pool_idx.numel() == n_pool, "the original layout fixes the set sizes"
+        train_x = (anchor[train_idx] + torch.randn(n_train, input_dim) * stdev_scale) / scaling_factor
+        eval_x = (anchor[eval_idx] + torch.randn(n_eval, input_dim) * stdev_scale) / scaling_factor
+        pool_x = (anchor[pool_idx] + torch.randn(n_pool, input_dim) * stdev_scale * stdev_pool_scale) / scaling_factor
+        # labels: one joint draw from the GP prior with observation noise (y_sampler)
+        x = torch.cat([train_x, eval_x, pool_x], 0)
+        model.eval()
+        likelihood.eval()
+        model.set_train_data(inputs=x, targets=torch.zeros(x.shape[0]), strict=False)
+        with torch.no_grad():
+            y = likelihood(model(x)).sample()
+    finally:
+        torch.set_default_dtype(prev)
+    train_y, eval_y, pool_y = y[:n_train], y[n_train: n_train + n_eval], y[n_train + n_eval:]
+    meta = dict(dataset="synthetic_polyadic", seed=seed, lengthscale=lengthscale, outputscale=outputscale, noise_std=noise_std)
+    return Problem(train_x, train_y, pool_x, pool_y, eval_x, eval_y, train_idx, pool_idx, eval_idx, meta)
+
+
 from adaptive_sampling_lib.paths import DATA_CACHE, EICU_DIR  # noqa: E402
 
 EICU_REG_DIR = os.path.join(EICU_DIR, "0518_data") + os.sep
