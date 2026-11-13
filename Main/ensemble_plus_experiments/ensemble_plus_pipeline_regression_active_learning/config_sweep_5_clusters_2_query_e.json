@@ -1,0 +1,178 @@
+{
+  "method": "grid",
+  "metric": {
+    "name": "val_final_var_square_loss",
+    "goal": "minimize"
+  },
+  "parameters": {
+	"no_train_points":{
+         "values": [20]
+    },
+    "no_test_points":{
+         "values": [252]
+    },
+    "no_pool_points":{
+         "values": [10]
+    },
+    "dataset_model_name":{
+         "values": ["GP"]
+    },
+    "no_anchor_points":{
+         "values": [5]
+    },	
+    "input_dim":{
+         "values": [1]
+    },	
+    "stdev_scale":{
+         "values": [0.01]
+    },	
+    "stdev_pool_scale":{
+         "values": [0.2]
+    },	
+    "scaling_factor":{
+         "values": [1.0]       
+    },	
+    "scale_by_input_dim":{
+         "values": [true]
+    },	
+    "gp_model_dataset_generation":{
+         "values": ["specify_own"]
+    },
+    "stdev_blr_w":{
+         "values": [0.1]
+    },	
+    "stdev_blr_noise":{
+         "values": [0.01]
+    },	
+    "logits":{
+         "values": [null]
+    },	
+    "if_logits":{
+         "values": [false]
+    },	
+    "if_logits_only_pool":{
+         "values": [false]
+    },	
+    "plot_folder":{
+         "values": ["none"]
+    },	
+    "direct_tensors_bool":{
+         "values": [true]
+    },	
+    "csv_file_train":{
+         "values": ["none"]
+    },	
+    "csv_file_test":{
+         "values": ["none"]
+    },	
+    "csv_file_pool":{
+         "values": ["none"]
+    },	
+    "y_column":{
+         "values": ["none"]
+    },
+    "shuffle":{
+         "values": [false]
+    },
+    "access_to_true_pool_y":{
+         "values": [false]
+    },
+    "batch_size_query":{
+         "values": [2]
+    },
+    "temp_k_subset":{
+         "values": [0.1]
+    },
+    "meta_opt_lr":{
+         "values": [0.05]
+    },
+    "meta_opt_weight_decay":{
+         "values": [0.0]
+    },
+    "n_classes":{
+         "values": [1]
+    },
+    "n_train_iter":{
+         "values": [5000]
+    },
+    "n_samples":{
+         "values": [100]
+    },
+    "G_samples":{
+         "values": [20]
+    },
+    "n_iter_noise":{
+         "values": [100]
+    },
+    "batch_size":{
+         "values": [500]
+    },
+    "basenet_hidden_sizes":{
+         "values": [[50,50]]
+    },
+    "exposed_layers":{
+         "values": [[false,true]]         
+    },
+    "z_dim":{
+         "values": [10]
+    },
+    "stdev_noise":{
+         "values": [0.1]
+    },
+    "learnable_epinet_hiddens":{
+     "values": [[15,15]]
+    },
+    "hidden_sizes_prior":{
+         "values": [[5,5]]
+    },
+    "seed_base":{
+         "values": [0]
+    },
+    "seed_learnable_epinet":{
+         "values": [0]
+    },
+    "seed_prior_epinet":{
+         "values": [0]
+    },
+    "alpha":{
+         "values": [100.0]
+    },
+    "n_ENN_iter":{
+         "values": [50]
+    },
+    "ENN_opt_lr":{
+         "values": [0.1]
+    },
+    "ENN_opt_weight_decay":{
+         "values": [10.0]
+    },
+    "z_samples":{
+         "values": [8]
+    },
+    "dataset_mean_constant":{
+         "values": [0.0]
+    },
+    "dataset_length_scale":{
+         "values": [1.0]
+    },
+    "dataset_output_scale":{
+         "values": [0.69]
+    },
+    "dataset_noise_std":{
+         "values": [0.1]
+    },
+    "seed_dataset":{
+		"values": [0]
+    },
+    "seed_training":{
+		"values": [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]
+    },
+    "device_index":{
+		"values": [0]
+    },
+    "algo":{
+	"values": ["random", "uncertainty", "greedy-batch-uncertainty"]
+    }				
+	
+  }
+}
