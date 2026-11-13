@@ -23,3 +23,10 @@ gp_pipeline_regression/grad_diag_cache/
 
 # Editor settings
 .vscode/
+
+# Local only, never committed: the reports, the experiment log, copies of the paper draft,
+# and models trained on credentialed clinical data (eICU / MIMIC)
+report_oct2026/
+EXPERIMENTS_OCT2026.md
+main-contextual.pdf
+*_eicu_trained.pt
