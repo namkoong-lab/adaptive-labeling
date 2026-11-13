@@ -25,6 +25,7 @@ experiments/
   ensemble_plus/             Ensemble+ regression, multi-step
   tabpfn/                    TabPFN v2.5 as the belief: regression/ and classification/
   kumo/                      Kumo-Tabular medium as the belief: regression/ and classification/
+paper_figures/               the paper's experiment figures and tables from the result JSONs
 ```
 
 Each experiment folder has a `run.py` (one run), a `make_jobs.py` (a job list; `--grid` gives the grids we ran) and its
@@ -141,3 +142,9 @@ preprocessing statistics (`--kumo_fixed_stats both`); both leave the ordinary up
 Checks in `regression/` and `classification/`: `check_weighted.py` (the weighted update against the package's forward
 pass, binary weights, gradients) and `check_relaxations.py`; `stage1.py` compares relaxations and objectives at the first
 epoch, and `agreement.py` compares variance criteria on candidate batches.
+
+## Paper figures (`paper_figures`)
+
+`make_figures.py` draws the GP-in-R^d and Kumo-Tabular figures, the tables and `summary.txt` (the numbers quoted in the
+text); `make_gp_extra_figures.py` draws the GP eICU, rollouts-per-estimate and gradient-quality figures.  Both read the
+results root and write to `paper_figures/output/` (or `--out <folder>`, e.g. the paper's figure folder).
