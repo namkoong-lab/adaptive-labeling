@@ -1,8 +1,8 @@
 """Figures and tables of the paper's experiments: GP in R^d and Kumo-Tabular (make_gp_extra_figures.py: GP on eICU, the
 rollouts-per-estimate experiment and the gradient-quality study).
 
-The plots keep the layout and line styles of the existing manuscript figures
-(figures/latest-experiments/combined_*.pdf): posterior variance of the target on
+The plots keep the layout and line styles of the manuscript's earlier figures:
+posterior variance of the target on
 the left and the error of its estimate on the right.  Style: Okabe-Ito colours
 (pathwise planner green), serif (Computer Modern) text, open axes with a light
 horizontal grid, a shaded band of one standard error around each mean curve,
